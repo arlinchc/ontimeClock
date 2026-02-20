@@ -50,4 +50,4 @@ function Clock() {
         )
     }
 
-export default Clock;
+export default Clock
