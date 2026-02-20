@@ -9,7 +9,7 @@ function Reports() {
                     <div className="bg-white p-6 rounded-xl shadow
                         hover:shadow-lg transition"> 
                             <h3 className="text-lg font-semibold mb-2">
-                                Reporte Mensual
+                                Reporte Mensual alejandro
                             </h3> 
                             <p className="text-slate-500 text-sm">
                                 Asistencia general por mes.
