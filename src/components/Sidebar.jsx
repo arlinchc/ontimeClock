@@ -23,6 +23,7 @@ function Sidebar(){
                     <Link to="/teachers" className='hover:text-sky-400 transition'>Maestros</Link>
                     <Link to="/clock" className='hover:text-sky-400 transition'>Reloj</Link>
                     <Link to="/reports" className='hover:text-sky-400 transition'>Reportes</Link>
+                    <Link to="/configuracion" className='hover:text-sky-400 transition'>Configuración</Link>
                  </nav>
               </div>
             
