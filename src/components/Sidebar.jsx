@@ -23,10 +23,7 @@ function Sidebar(){
                     <Link to="/teachers" className='hover:text-sky-400 transition'>Maestros</Link>
                     <Link to="/clock" className='hover:text-sky-400 transition'>Reloj</Link>
                     <Link to="/reports" className='hover:text-sky-400 transition'>Reportes</Link>
-                    <NavLink to="/Systemconfig" className='hover:text-sky-400 transition'>Configuración</NavLink>
-                    <Link to="/sistemaconfig" className="flex items-center gap-4 hover:text-[#f0c02f] transition-all group">
-                                <Cog6ToothIcon className={`${iconSize} text-[#f0c02f] group-hover:scale-110 transition-transform`} />
-                                <span className='text-sm font-medium'>Configuración</span></Link>
+                    <Link to="/sistemaconfig" className='hover:text-sky-400 transition'>Configuración</Link>
                  </nav>
               </div>
             
