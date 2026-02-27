@@ -9,7 +9,7 @@ import Dashboard from "./pages/Dashboard"
 import Teachers from "./pages/Teachers"
 import Clock from "./pages/Clock"
 import Reports from "./pages/Reports"
-import SystemConfig from "./pages/SystemConfig"
+import SystemConfig from "./pages/SistemaConfig"
 
 
 function App() {
