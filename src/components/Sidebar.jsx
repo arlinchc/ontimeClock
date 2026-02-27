@@ -1,4 +1,4 @@
-import {Link} from 'react-router-dom'
+import {Link, NavLink} from 'react-router-dom'
 
 function Sidebar(){
     return(
@@ -23,6 +23,7 @@ function Sidebar(){
                     <Link to="/teachers" className='hover:text-sky-400 transition'>Maestros</Link>
                     <Link to="/clock" className='hover:text-sky-400 transition'>Reloj</Link>
                     <Link to="/reports" className='hover:text-sky-400 transition'>Reportes</Link>
+                    <NavLink to="/configuracion" className='hover:text-sky-400 transition'>⚙️ Configuración</NavLink>
                  </nav>
               </div>
             
