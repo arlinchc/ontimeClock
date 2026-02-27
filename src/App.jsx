@@ -1,4 +1,6 @@
- {/* Maquetar sidebar siempre visible con todas rutas - publicas y administrativas*/}
+import ScheduleModule from "./modules/schedule/index.jsx";
+
+{/* Maquetar sidebar siempre visible con todas rutas - publicas y administrativas*/}
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import Sidebar from "./components/Sidebar"
 
@@ -27,7 +29,7 @@ function App() {
             <Route path="/teachers" element={<Teachers />} />
             <Route path="/clock" element={<Clock />} />
             <Route path="/reports" element={<Reports />} />
-            <Route path="/sistemaconfig" element={<SystemConfig />} />
+            <Route path="/horarios/*" element={<ScheduleModule  />} />
           </Routes>
         </main>
       </div>
