@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard"
 import Teachers from "./pages/Teachers"
 import Clock from "./pages/Clock"
 import Reports from "./pages/Reports"
+import SystemConfig from "./pages/sistemaconfig"
 
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
             <Route path="/teachers" element={<Teachers />} />
             <Route path="/clock" element={<Clock />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/sistemaconfig" element={<SystemConfig />} />
           </Routes>
         </main>
       </div>
