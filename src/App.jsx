@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard"
 import Teachers from "./pages/Teachers"
 import Clock from "./pages/Clock"
 import Reports from "./pages/Reports"
+import SystemConfig from "./pages/sistemaconfig"
 
 
 function App() {
