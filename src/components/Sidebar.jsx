@@ -7,6 +7,7 @@
  * - Tailwind CSS IntelliSense (para autocompletado de clases)
  * - ES7+ React/Redux/React-Native snippets
  */
+//archivo: src/components/Sidebar.jsx
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
