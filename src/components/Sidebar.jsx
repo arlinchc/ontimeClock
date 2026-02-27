@@ -1,12 +1,4 @@
-/**
- * INSTRUCCIONES DE INSTALACIÓN:
- * 1. Instalar Heroicons: npm install @heroicons/react
- * 2. Instalar React Router: npm install react-router-dom
- * 3. Tener configurado Tailwind CSS en el proyecto.
- * * EXTENSIONES RECOMENDADAS EN VS CODE:
- * - Tailwind CSS IntelliSense (para autocompletado de clases)
- * - ES7+ React/Redux/React-Native snippets
- */
+import {Link, NavLink} from 'react-router-dom'
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';

@@ -2,7 +2,8 @@ function Home(){
     return(
         <div>
             <h2>Inicio</h2>
-            <p>Bienvenido a nuestra app web con React isaac</p>
+            <p>Bienvenido a nuestra app web con</p>
+           
         </div>
     )
 }
