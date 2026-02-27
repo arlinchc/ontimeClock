@@ -1,4 +1,5 @@
 
+
 import { useState } from "react";
 
 // ─── Paleta de colores y estilos base (CSS-in-JS para no afectar estilos globales) ───

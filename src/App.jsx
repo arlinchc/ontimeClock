@@ -1,4 +1,4 @@
- {/* Maquetar sidebar siempre visible con todas rutas - publicas y administrativas*/}
+{/* Maquetar sidebar siempre visible con todas rutas - publicas y administrativas*/}
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import Sidebar from "./components/Sidebar"
 
@@ -9,7 +9,7 @@ import Dashboard from "./pages/Dashboard"
 import Teachers from "./pages/Teachers"
 import Clock from "./pages/Clock"
 import Reports from "./pages/Reports"
-import SystemConfig from "./pages/SytemConfig/Systemconfig"
+import SystemConfig from "./pages/SystemConfig"
 
 
 function App() {
@@ -27,7 +27,7 @@ function App() {
             <Route path="/teachers" element={<Teachers />} />
             <Route path="/clock" element={<Clock />} />
             <Route path="/reports" element={<Reports />} />
-            <Route path="/configuracion" element={<SystemConfig />} />
+            <Route path="/sistemaconfig" element={<SystemConfig />} />
           </Routes>
         </main>
       </div>
