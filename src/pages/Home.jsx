@@ -2,7 +2,7 @@ function Home(){
     return(
         <div>
             <h2>Inicio</h2>
-            <p>Bienvenido a nuestra app web con React Emilio</p>
+            <p>Bienvenido a nuestra app web con React</p>
         </div>
     )
 }
