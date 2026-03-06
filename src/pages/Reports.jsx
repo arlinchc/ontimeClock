@@ -25,245 +25,220 @@
     ); 
 }
 export default Reports; */
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 function Reports() {
-  const [institution, setInstitution] = useState("Instituto Central");
-  const [timezone, setTimezone] = useState("America/Mexico_City");
-  const [format24, setFormat24] = useState(true);
 
-  const [time, setTime] = useState(new Date());
+  // ===============================
+  // DATOS DUMMY
+  // ===============================
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTime(new Date());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  const dummyData = [
+    { profesor: "Irvin Ac Chan", fecha: "2026-02-01", asistencias: 1, retardos: 0, faltas: 0 },
+    { profesor: "Leydi", fecha: "2026-02-02", asistencias: 1, retardos: 1, faltas: 0 },
+    { profesor: "Trejo Rocha", fecha: "2026-02-03", asistencias: 0, retardos: 0, faltas: 1 },
+    { profesor: "Mari Eugenia", fecha: "2026-02-04", asistencias: 1, retardos: 0, faltas: 0 },
+    { profesor: "Jessica", fecha: "2026-02-05", asistencias: 1, retardos: 1, faltas: 0 },
+    { profesor: "Grecia", fecha: "2026-02-06", asistencias: 0, retardos: 0, faltas: 1 },
+    { profesor: "Irvin Ac Chan", fecha: "2026-02-07", asistencias: 1, retardos: 0, faltas: 0 },
+    { profesor: "Jessica", fecha: "2026-02-08", asistencias: 1, retardos: 0, faltas: 0 },
+  ];
 
-  const formattedTime = time.toLocaleTimeString("es-MX", {
-    timeZone: timezone,
-    hour12: !format24,
-  });
+  // ===============================
+  // ESTADOS
+  // ===============================
 
-  // TOLERANCIA
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [filteredData, setFilteredData] = useState([]);
+  const [selectedTeacher, setSelectedTeacher] = useState("Todos");
 
-  const [tolerance, setTolerance] = useState(10);
-  // HORARIOS
+  const teachers = ["Todos", ...new Set(dummyData.map(d => d.profesor))];
 
-  const [schedule, setSchedule] = useState([]);
-  const [newEntry, setNewEntry] = useState("");
-  const [newExit, setNewExit] = useState("");
+  // ===============================
+  // FILTRAR
+  // ===============================
 
-  const addSchedule = () => {
-    if (newEntry && newExit) {
-      setSchedule([
-        ...schedule,
-        { id: Date.now(), entry: newEntry, exit: newExit }
-      ]);
-      setNewEntry("");
-      setNewExit("");
+  const handleSearch = () => {
+    if (!startDate || !endDate) return;
+
+    let result = dummyData.filter(item =>
+      item.fecha >= startDate && item.fecha <= endDate
+    );
+
+    if (selectedTeacher !== "Todos") {
+      result = result.filter(item => item.profesor === selectedTeacher);
     }
+
+    setFilteredData(result);
   };
 
-  const removeSchedule = (id) => {
-    setSchedule(schedule.filter(item => item.id !== id));
-  };
+  // ===============================
+  // EXPORTAR PDF
+  // ===============================
 
-  // ROLES
+  const exportPDF = () => {
+    if (filteredData.length === 0) return;
 
-  const [roles, setRoles] = useState(["Administrador", "Docente"]);
-  const [newRole, setNewRole] = useState("");
+    const doc = new jsPDF();
 
-  const addRole = () => {
-    if (newRole.trim() !== "") {
-      setRoles([...roles, newRole]);
-      setNewRole("");
-    }
-  };
+    doc.setFontSize(16);
+    doc.text("Reporte de Incidencias de los Docentes", 14, 15);
 
-  const removeRole = (index) => {
-    setRoles(roles.filter((_, i) => i !== index));
-  };
-
-  // NOTIFICACIONES
-
-  const [notifications, setNotifications] = useState({
-    retardos: true,
-    faltas: true,
-    reportes: false
-  });
-
-  const toggleNotification = (key) => {
-    setNotifications({
-      ...notifications,
-      [key]: !notifications[key]
+    autoTable(doc, {
+      startY: 25,
+      head: [["Profesor", "Fecha", "Asistencias", "Retardos", "Faltas"]],
+      body: filteredData.map(item => [
+        item.profesor,
+        item.fecha,
+        item.asistencias,
+        item.retardos,
+        item.faltas
+      ])
     });
+
+    doc.save(`reporte_${startDate}_${endDate}.pdf`);
   };
+
+  // ===============================
+  // RENDER
+  // ===============================
 
   return (
-    <div className="min-h-screen bg-slate-100 p-8">
-      <h1 className="text-3xl font-bold text-slate-800 mb-6">
-        Panel de Configuración
-      </h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">
 
-      {/* Reloj */}
-      <div className="bg-slate-900 text-white p-6 rounded-2xl shadow mb-6">
-        <h2 className="text-xl font-semibold">
-          {institution}
-        </h2>
-        <p className="text-3xl mt-2">
-          {formattedTime}
-        </p>
+      {/* HEADER */}
+      <div className="bg-blue-900 text-white p-6 shadow-lg">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <h1 className="text-3xl font-bold tracking-wide">
+            Reporte de Incidencias de los Docentes
+          </h1>
+
+          {filteredData.length > 0 && (
+            <button
+              onClick={exportPDF}
+              className="bg-white text-blue-900 px-5 py-2 rounded-lg font-semibold hover:scale-105 transition"
+            >
+              📄 Exportar PDF
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="max-w-7xl mx-auto p-8">
 
-        {/* Ajustes Institucionales */}
-        <div className="bg-slate-900 text-white p-6 rounded-2xl shadow">
-          <h3 className="text-lg font-semibold mb-3">
-            Ajustes Institucionales
-          </h3>
+        {/* FILTROS */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-slate-200">
+          <div className="grid md:grid-cols-4 gap-6">
 
-          <label className="text-sm">Nombre Institución</label>
-          <input
-            className="w-full p-2 rounded text-black mb-3"
-            value={institution}
-            onChange={(e) => setInstitution(e.target.value)}
-          />
+            <div>
+              <label className="block text-sm font-semibold text-slate-600 mb-1">
+                Fecha Inicio
+              </label>
+              <input
+                type="date"
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
 
-          <label className="text-sm">Zona Horaria</label>
-          <select
-            className="w-full p-2 rounded text-black mb-3"
-            value={timezone}
-            onChange={(e) => setTimezone(e.target.value)}
-          >
-            <option value="America/Mexico_City">México</option>
-            <option value="America/New_York">New York</option>
-            <option value="Europe/Madrid">Madrid</option>
-          </select>
+            <div>
+              <label className="block text-sm font-semibold text-slate-600 mb-1">
+                Fecha Final
+              </label>
+              <input
+                type="date"
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
 
-          <button
-            onClick={() => setFormat24(!format24)}
-            className="bg-blue-700 px-4 py-2 rounded"
-          >
-            Formato: {format24 ? "24h" : "12h"}
-          </button>
-        </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-600 mb-1">
+                Filtrar Profesor
+              </label>
+              <select
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                value={selectedTeacher}
+                onChange={(e) => setSelectedTeacher(e.target.value)}
+              >
+                {teachers.map((teacher, index) => (
+                  <option key={index}>{teacher}</option>
+                ))}
+              </select>
+            </div>
 
-        {/* Tolerancia */}
-        <div className="bg-slate-900 text-white p-6 rounded-2xl shadow">
-          <h3 className="text-lg font-semibold mb-3">
-            Configuración de Tolerancia
-          </h3>
+            <div className="flex items-end">
+              <button
+                onClick={handleSearch}
+                className="w-full bg-blue-900 text-white py-2 rounded-lg font-semibold hover:bg-blue-800 transition"
+              >
+                🔎 Generar Reporte
+              </button>
+            </div>
 
-          <input
-            type="number"
-            className="w-full p-2 rounded text-black"
-            value={tolerance}
-            onChange={(e) => setTolerance(Number(e.target.value))}
-          />
-
-          <p className="mt-2 text-sm text-slate-300">
-            Minutos permitidos antes de marcar retardo: {tolerance}
-          </p>
-        </div>
-
-        {/* Horario Base */}
-        <div className="bg-slate-900 text-white p-6 rounded-2xl shadow">
-          <h3 className="text-lg font-semibold mb-3">
-            Horario Base
-          </h3>
-
-          <div className="flex gap-2 mb-3">
-            <input
-              type="time"
-              className="p-2 rounded text-black"
-              value={newEntry}
-              onChange={(e) => setNewEntry(e.target.value)}
-            />
-            <input
-              type="time"
-              className="p-2 rounded text-black"
-              value={newExit}
-              onChange={(e) => setNewExit(e.target.value)}
-            />
-            <button
-              onClick={addSchedule}
-              className="bg-blue-700 px-4 rounded"
-            >
-              +
-            </button>
           </div>
-
-          {schedule.map(item => (
-            <div key={item.id} className="flex justify-between mb-2">
-              <span>{item.entry} - {item.exit}</span>
-              <button
-                onClick={() => removeSchedule(item.id)}
-                className="text-red-400"
-              >
-                Eliminar
-              </button>
-            </div>
-          ))}
         </div>
 
-        {/* Gestión de Roles */}
-        <div className="bg-slate-900 text-white p-6 rounded-2xl shadow">
-          <h3 className="text-lg font-semibold mb-3">
-            Gestión de Roles
-          </h3>
+        {/* TABLA */}
+        {filteredData.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
 
-          <div className="flex gap-2 mb-3">
-            <input
-              className="p-2 rounded text-black w-full"
-              value={newRole}
-              onChange={(e) => setNewRole(e.target.value)}
-            />
-            <button
-              onClick={addRole}
-              className="bg-blue-700 px-4 rounded"
-            >
-              +
-            </button>
+            <table className="w-full">
+              <thead className="bg-blue-900 text-white">
+                <tr>
+                  <th className="p-4 text-left">Profesor</th>
+                  <th className="p-4 text-left">Fecha</th>
+                  <th className="p-4 text-center">Asistencias</th>
+                  <th className="p-4 text-center">Retardos</th>
+                  <th className="p-4 text-center">Faltas</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredData.map((item, index) => (
+                  <tr key={index} className="border-b hover:bg-slate-50 transition">
+                    <td className="p-4">{item.profesor}</td>
+                    <td className="p-4">{item.fecha}</td>
+                    <td className="p-4 text-center text-green-600 font-semibold">
+                      {item.asistencias}
+                    </td>
+                    <td className="p-4 text-center text-yellow-600 font-semibold">
+                      {item.retardos}
+                    </td>
+                    <td className="p-4 text-center text-red-600 font-semibold">
+                      {item.faltas}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* TOTALES */}
+            <div className="bg-slate-100 p-4 flex justify-end gap-8 font-semibold">
+              <span>
+                Total Asistencias: {
+                  filteredData.reduce((a,b)=>a+b.asistencias,0)
+                }
+              </span>
+              <span>
+                Total Retardos: {
+                  filteredData.reduce((a,b)=>a+b.retardos,0)
+                }
+              </span>
+              <span>
+                Total Faltas: {
+                  filteredData.reduce((a,b)=>a+b.faltas,0)
+                }
+              </span>
+            </div>
+
           </div>
-
-          {roles.map((role, index) => (
-            <div key={index} className="flex justify-between mb-2">
-              <span>{role}</span>
-              <button
-                onClick={() => removeRole(index)}
-                className="text-red-400"
-              >
-                Eliminar
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {/* Notificaciones */}
-        <div className="bg-slate-900 text-white p-6 rounded-2xl shadow md:col-span-2">
-          <h3 className="text-lg font-semibold mb-3">
-            Preferencias de Notificaciones
-          </h3>
-
-          {Object.keys(notifications).map(key => (
-            <div key={key} className="flex justify-between mb-2">
-              <span className="capitalize">{key}</span>
-              <button
-                onClick={() => toggleNotification(key)}
-                className={`px-4 py-1 rounded ${
-                  notifications[key]
-                    ? "bg-blue-600"
-                    : "bg-gray-500"
-                }`}
-              >
-                {notifications[key] ? "Activo" : "Inactivo"}
-              </button>
-            </div>
-          ))}
-        </div>
+        )}
 
       </div>
     </div>
