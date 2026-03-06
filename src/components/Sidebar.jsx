@@ -1,5 +1,14 @@
-import {Link, NavLink} from 'react-router-dom'
-
+/**
+ * INSTRUCCIONES DE INSTALACIÓN:
+ * 1. Instalar Heroicons: npm install @heroicons/react
+ * 2. Instalar React Router: npm install react-router-dom
+ * 3. Tener configurado Tailwind CSS en el proyecto.
+ * * EXTENSIONES RECOMENDADAS EN VS CODE:
+ * - Tailwind CSS IntelliSense (para autocompletado de clases)
+ * - ES7+ React/Redux/React-Native snippets
+ */
+//archivo: src/components/Sidebar.jsx
+//nuevo sidebar
 import { useState } from 'react';
 import { 
     HomeIcon, 
@@ -43,18 +52,78 @@ function Sidebar() {
                     <Bars3Icon className="h-8 w-8" />
                 </button>
             </div>
-           
-           {/*Seccion administrativa*/}
-              <div className='mt-6'>
-                 <p className='text-slate-400 text-sm mb-2 uppercase tracking-wide'>Administracion</p>
-                 <nav className='flex flex-col gap-3'>
-                    <Link to="/admin" className='hover:text-sky-400 transition'>Dashboard</Link>
-                    <Link to="/teachers" className='hover:text-sky-400 transition'>Maestros</Link>
-                    <Link to="/clock" className='hover:text-sky-400 transition'>Reloj</Link>
-                    <Link to="/reports" className='hover:text-sky-400 transition'>Reportes</Link>
-                     <Link to="/horarios" className='hover:text-sky-400 transition'>Horario</Link>
-                 </nav>
-              </div>
+
+            {!isCollapsed && (
+                <>
+                    {/* 2. PERFIL DE USUARIO Y BUSCADOR */}
+                    <div className="flex items-center gap-3 mb-6 p-2 rounded-lg bg-white/5 border border-white/10">
+                        <UserCircleIcon className="h-8 w-8 text-[#f0c02f] shrink-0" />
+                        <div>
+                            <p className="text-xs font-bold truncate">Admin UNID</p>
+                            <p className="text-[10px] text-slate-400">En línea</p>
+                        </div>
+                    </div>
+
+                    <div className='relative mb-8 px-1'>
+                        <MagnifyingGlassIcon className="h-4 w-4 absolute left-3 top-2.5 text-slate-500" />
+                        <input 
+                            type="text" 
+                            placeholder="Buscar..." 
+                            className="w-full bg-white/5 text-sm text-white rounded-md py-2 pl-8 pr-2 focus:outline-none border border-white/10 focus:border-[#f0c02f]/50 transition-all"
+                        />
+                    </div>
+
+                    {/* 3. SECCIÓN SITIO (Navegación Pública) */}
+                    <div className='mb-6'>   
+                        <p className='text-slate-500 text-[11px] mb-4 uppercase tracking-[2px] font-black'>Sitio</p>
+                        <nav className='flex flex-col gap-5'>
+                            <Link to="/" className="flex items-center gap-4 hover:text-[#f0c02f] transition-all group">
+                                <HomeIcon className={`${iconSize} text-[#f0c02f] group-hover:scale-110 transition-transform`} />
+                                <span className='text-sm font-medium'>Inicio</span>
+                            </Link>
+                            <Link to="/about" className="flex items-center gap-4 hover:text-[#f0c02f] transition-all group">
+                                <InformationCircleIcon className={`${iconSize} text-[#f0c02f] group-hover:scale-110 transition-transform`} />
+                                <span className='text-sm font-medium'>Acerca de</span>
+                            </Link>
+                            <Link to="/contact" className="flex items-center gap-4 hover:text-[#f0c02f] transition-all group">
+                                <PhoneIcon className={`${iconSize} text-[#f0c02f] group-hover:scale-110 transition-transform`} />
+                                <span className='text-sm font-medium'>Contacto</span>
+                            </Link>
+                        </nav>
+                    </div>
+
+                    {/* ESPACIADOR FLEXIBLE */}
+                    <div className='flex-1' />
+                    
+                    {/* 4. SECCIÓN ADMINISTRATIVA (Gestión y Configuración) */}
+                    <div className='mt-4 mb-8'>
+                        <p className='text-slate-500 text-[11px] mb-4 uppercase tracking-[2px] font-black'>Administración</p>
+                        <nav className='flex flex-col gap-5'>
+                            <Link to="/admin" className="flex items-center gap-4 hover:text-[#f0c02f] transition-all group">
+                                <Squares2X2Icon className={`${iconSize} text-[#f0c02f] group-hover:scale-110 transition-transform`} />
+                                <span className='text-sm font-medium'>Dashboard</span>
+                            </Link>
+                            <Link to="/teachers" className="flex items-center gap-4 hover:text-[#f0c02f] transition-all group">
+                                <UserGroupIcon className={`${iconSize} text-[#f0c02f] group-hover:scale-110 transition-transform`} />
+                                <span className='text-sm font-medium'>Maestros</span>
+                            </Link>
+                            <Link to="/clock" className="flex items-center gap-4 hover:text-[#f0c02f] transition-all group">
+                                <ClockIcon className={`${iconSize} text-[#f0c02f] group-hover:scale-110 transition-transform`} />
+                                <span className='text-sm font-medium'>Reloj</span>
+                            </Link>
+                            <Link to="/reports" className="flex items-center gap-4 hover:text-[#f0c02f] transition-all group">
+                                <DocumentChartBarIcon className={`${iconSize} text-[#f0c02f] group-hover:scale-110 transition-transform`} />
+                                <span className='text-sm font-medium'>Reportes</span>
+                            </Link>
+                            {/* NUEVO: Enlace a la página de Configuración */}
+                            <Link to="/sistemaconfig" className="flex items-center gap-4 hover:text-[#f0c02f] transition-all group">
+                                <Cog6ToothIcon className={`${iconSize} text-[#f0c02f] group-hover:scale-110 transition-transform`} />
+                                <span className='text-sm font-medium'>Configuración</span>
+                            </Link>
+                        </nav>
+                    </div>
+                </>
+            )}
             
             {/* Si está colapsado, empuja el botón de salida al final */}
             {isCollapsed && <div className='flex-1' />}
