@@ -1,5 +1,3 @@
-
-
 import { useState } from "react";
 
 // ─── Paleta de colores y estilos base (CSS-in-JS para no afectar estilos globales) ───
@@ -391,11 +389,17 @@ export default function SystemConfig() {
     inasistencias: 3,
   });
 
-  // --- Estado: Horario base ---
-  const [diasActivos, setDiasActivos] = useState([true, true, true, true, true, false, false]);
-  const [horaInicio, setHoraInicio] = useState("07:00");
-  const [horaFin, setHoraFin] = useState("18:00");
-  const [duracionBloque, setDuracionBloque] = useState("60");
+  // --- Estado: Horario base (por día) ---
+  const [horarioPorDia, setHorarioPorDia] = useState({
+    0: { activo: true,  inicio: "07:00", fin: "18:00" }, // Lun
+    1: { activo: true,  inicio: "07:00", fin: "18:00" }, // Mar
+    2: { activo: true,  inicio: "07:00", fin: "18:00" }, // Mié
+    3: { activo: true,  inicio: "07:00", fin: "18:00" }, // Jue
+    4: { activo: true,  inicio: "07:00", fin: "18:00" }, // Vie
+    5: { activo: false, inicio: "08:00", fin: "14:00" }, // Sáb
+    6: { activo: false, inicio: "08:00", fin: "14:00" }, // Dom
+  });
+  const [diaSeleccionado, setDiaSeleccionado] = useState(0);
 
   // --- Estado: Roles ---
   const [roles, setRoles] = useState(MOCK_ROLES);
@@ -412,9 +416,18 @@ export default function SystemConfig() {
 
   // --- Handlers ---
   const toggleDia = (idx) => {
-    const copia = [...diasActivos];
-    copia[idx] = !copia[idx];
-    setDiasActivos(copia);
+    setHorarioPorDia((prev) => ({
+      ...prev,
+      [idx]: { ...prev[idx], activo: !prev[idx].activo },
+    }));
+    setDiaSeleccionado(idx);
+  };
+
+  const actualizarHorarioDia = (idx, campo, valor) => {
+    setHorarioPorDia((prev) => ({
+      ...prev,
+      [idx]: { ...prev[idx], [campo]: valor },
+    }));
   };
 
   const toggleRolEstado = (id) => {
@@ -590,23 +603,25 @@ export default function SystemConfig() {
         <SectionCard
           icon="📅"
           title="Horario Base"
-          desc="Define los días y horas de operación del sistema"
+          desc="Define el horario de operación para cada día de la semana"
           color="#10b981"
         >
-          <p style={{ ...styles.label, marginBottom: "0.75rem" }}>Días laborables activos</p>
+          <p style={{ ...styles.label, marginBottom: "0.75rem" }}>Selecciona un día para configurar su horario</p>
           <div style={styles.scheduleGrid}>
             {DIAS_SEMANA.map((dia, idx) => (
               <div
                 key={dia}
-                onClick={() => toggleDia(idx)}
+                onClick={() => setDiaSeleccionado(idx)}
                 style={{
                   ...styles.dayCell,
-                  ...(diasActivos[idx] ? styles.dayCellActive : styles.dayCellInactive),
+                  ...(horarioPorDia[idx].activo ? styles.dayCellActive : styles.dayCellInactive),
+                  outline: diaSeleccionado === idx ? "2px solid #10b981" : "none",
+                  outlineOffset: "2px",
                 }}
               >
                 <div>{dia}</div>
                 <div style={{ fontSize: "0.65rem", marginTop: "0.2rem", opacity: 0.7 }}>
-                  {diasActivos[idx] ? "✓" : "—"}
+                  {horarioPorDia[idx].activo ? "✓" : "—"}
                 </div>
               </div>
             ))}
@@ -614,37 +629,72 @@ export default function SystemConfig() {
 
           <div style={styles.divider} />
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>Hora de inicio</label>
-              <input
-                type="time"
-                style={styles.input}
-                value={horaInicio}
-                onChange={(e) => setHoraInicio(e.target.value)}
-              />
+          {/* Panel de configuración del día seleccionado */}
+          <div style={{
+            background: horarioPorDia[diaSeleccionado].activo ? "rgba(16,185,129,0.05)" : "rgba(0,0,0,0.03)",
+            border: `1px solid ${horarioPorDia[diaSeleccionado].activo ? "rgba(16,185,129,0.2)" : "rgba(0,0,0,0.08)"}`,
+            borderRadius: "12px",
+            padding: "1.25rem",
+            marginBottom: "1rem",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <p style={{ margin: 0, fontWeight: "600", fontSize: "0.95rem", color: "#1f2937" }}>
+                {["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"][diaSeleccionado]}
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <span style={{ fontSize: "0.8rem", color: "#6b7280" }}>
+                  {horarioPorDia[diaSeleccionado].activo ? "Activo" : "Inactivo"}
+                </span>
+                <Toggle
+                  checked={horarioPorDia[diaSeleccionado].activo}
+                  onChange={() => toggleDia(diaSeleccionado)}
+                />
+              </div>
             </div>
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>Hora de cierre</label>
-              <input
-                type="time"
-                style={styles.input}
-                value={horaFin}
-                onChange={(e) => setHoraFin(e.target.value)}
-              />
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", opacity: horarioPorDia[diaSeleccionado].activo ? 1 : 0.4, pointerEvents: horarioPorDia[diaSeleccionado].activo ? "auto" : "none" }}>
+              <div style={styles.fieldGroup}>
+                <label style={styles.label}>Hora de inicio</label>
+                <input
+                  type="time"
+                  style={styles.input}
+                  value={horarioPorDia[diaSeleccionado].inicio}
+                  onChange={(e) => actualizarHorarioDia(diaSeleccionado, "inicio", e.target.value)}
+                />
+              </div>
+              <div style={styles.fieldGroup}>
+                <label style={styles.label}>Hora de cierre</label>
+                <input
+                  type="time"
+                  style={styles.input}
+                  value={horarioPorDia[diaSeleccionado].fin}
+                  onChange={(e) => actualizarHorarioDia(diaSeleccionado, "fin", e.target.value)}
+                />
+              </div>
             </div>
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>Duración de bloque</label>
-              <select
-                style={styles.select}
-                value={duracionBloque}
-                onChange={(e) => setDuracionBloque(e.target.value)}
-              >
-                <option value="45">45 minutos</option>
-                <option value="60">60 minutos</option>
-                <option value="90">90 minutos</option>
-                <option value="120">120 minutos</option>
-              </select>
+          </div>
+
+          {/* Resumen de todos los días activos */}
+          <div style={{ marginTop: "0.5rem" }}>
+            <p style={{ ...styles.label, marginBottom: "0.5rem" }}>Resumen semanal</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+              {DIAS_SEMANA.map((dia, idx) => (
+                horarioPorDia[idx].activo && (
+                  <div key={idx} style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    fontSize: "0.82rem", padding: "0.35rem 0.6rem",
+                    background: diaSeleccionado === idx ? "rgba(16,185,129,0.08)" : "transparent",
+                    borderRadius: "6px", cursor: "pointer",
+                  }} onClick={() => setDiaSeleccionado(idx)}>
+                    <span style={{ color: "#374151", fontWeight: diaSeleccionado === idx ? "600" : "400" }}>
+                      {["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"][idx]}
+                    </span>
+                    <span style={{ color: "#6b7280" }}>
+                      {horarioPorDia[idx].inicio} – {horarioPorDia[idx].fin}
+                    </span>
+                  </div>
+                )
+              ))}
             </div>
           </div>
 
