@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const initialTeachers = [
     { id: 1, name: "Leydi Xequeb", subject: "Matemáticas", email: "l.xequeb@universidad.edu", phone: "+502 5555-0101", status: "Activo", degree: "MSc. Matemáticas Aplicadas", joined: "2019-03-15", avatar: "LX" },

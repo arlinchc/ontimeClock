@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
-import { INITIAL_CLOSED_DAYS, INITIAL_SCHEDULE, TEACHERS } from "../data/mockData";
+import { useState, useMemo, useEffect } from "react";
+import { INITIAL_CLOSED_DAYS, TIME_SLOTS } from "../data/mockData";
 import LessonModal from "../components/LessonModal";
+import { scheduleAPI } from "../../../api/scheduleAPI";
 
 const MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const DOW_NAMES   = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
@@ -18,6 +19,48 @@ export default function CalendarView() {
   const [month, setMonth] = useState(now.getMonth());
   const [selDate, setSel] = useState(null);
   const [modal, setModal] = useState(null);
+  const [schedules, setSchedules] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [schedulesData, teachersData] = await Promise.all([
+          scheduleAPI.getSchedules(),
+          scheduleAPI.getTeachers()
+        ]);
+        setSchedules(schedulesData);
+        setTeachers(teachersData);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const getTeacherColor = (teacherId) => {
+    const colors = ["#4f46e5", "#0284c7", "#d97706", "#059669", "#db2777", "#7c3aed"];
+    return colors[teacherId % colors.length];
+  };
+
+  const convertToSlot = (timeString) => {
+    const slot = TIME_SLOTS.find(s => s.start === timeString);
+    return slot ? slot.id : 1;
+  };
+
+  const convertedSchedules = useMemo(() => {
+    return schedules.map(s => ({
+      id: s.id,
+      teacherId: s.teacher_id,
+      day: s.day,
+      subject: s.subject,
+      room: s.room,
+      group: s.group,
+      startSlot: convertToSlot(s.start_time),
+      endSlot: convertToSlot(s.end_time),
+      teacher_name: s.teacher_name
+    }));
+  }, [schedules]);
 
   const closedMap = useMemo(() => {
     const m = {};
@@ -29,7 +72,7 @@ export default function CalendarView() {
   const firstDow    = new Date(year, month, 1).getDay();
   const cells       = [...Array(firstDow).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
   const fmt         = d => `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-  const todayStr    = fmt.call(null, null) && `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+  const todayStr    = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
 
   const prev = () => month === 0  ? (setMonth(11), setYear(y => y - 1)) : setMonth(m => m - 1);
   const next = () => month === 11 ? (setMonth(0),  setYear(y => y + 1)) : setMonth(m => m + 1);
@@ -38,11 +81,10 @@ export default function CalendarView() {
     if (!selDate) return [];
     const dow     = new Date(selDate + "T12:00").getDay();
     const dayName = DOW_TO_DAY[dow];
-    return dayName ? INITIAL_SCHEDULE.filter(l => l.day === dayName) : [];
-  }, [selDate]);
-
+    return dayName ? convertedSchedules.filter(l => l.day === dayName) : [];
+  }, [selDate, convertedSchedules]);
   return (
-    <div>
+      <div>
       <h1 className="text-2xl font-bold text-gray-800 mb-1">Calendario Académico</h1>
       <p className="text-gray-500 text-sm mb-5">Festivos, días cerrados y clases por día</p>
 
@@ -134,15 +176,16 @@ export default function CalendarView() {
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Clases del día</p>
                   <div className="space-y-2">
                     {selLessons.map(l => {
-                      const t = TEACHERS.find(x => x.id === l.teacherId);
+                      const t = teachers.find(x => x.id === l.teacherId);
+                      const color = getTeacherColor(l.teacherId);
                       return (
                         <button key={l.id} onClick={() => setModal(l)}
                           className="w-full text-left p-3 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-all"
-                          style={{ borderLeft: `3px solid ${t?.color}` }}
+                          style={{ borderLeft: `3px solid ${color}` }}
                         >
                           <p className="text-sm font-medium text-gray-800">{l.subject}</p>
                           <p className="text-xs text-gray-400 mt-0.5">{l.room} · Grupo {l.group}</p>
-                          <p className="text-xs mt-0.5 font-medium" style={{ color: t?.color }}>{t?.name}</p>
+                          <p className="text-xs mt-0.5 font-medium" style={{ color }}>{t?.name}</p>
                         </button>
                       );
                     })}
@@ -189,3 +232,4 @@ export default function CalendarView() {
     </div>
   );
 }
+
