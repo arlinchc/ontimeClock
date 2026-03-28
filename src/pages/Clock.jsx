@@ -16,6 +16,9 @@ export default function Clock() {
   const [fade, setFade] = useState(true);
   const [pulse, setPulse] = useState(false);
   const [showAllMsgs, setShowAllMsgs] = useState(false);
+  const [matricula, setMatricula] = useState("");
+  const [selectedMatricula, setSelectedMatricula] = useState("");
+  const [teachers, setTeachers] = useState([]);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -31,6 +34,29 @@ export default function Clock() {
       }, 400);
     }, 5000);
     return () => clearInterval(rotateMsg);
+  }, []);
+
+  useEffect(() => {
+    const loadTeachers = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/teachers");
+        if (!response.ok) return;
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setTeachers(
+            [...data].sort((a, b) =>
+              String(a?.nombre || "").localeCompare(String(b?.nombre || ""), "es", {
+                sensitivity: "base",
+              })
+            )
+          );
+        }
+      } catch {
+        setTeachers([]);
+      }
+    };
+
+    loadTeachers();
   }, []);
 
   const formatTime = (date) => {
@@ -55,23 +81,78 @@ export default function Clock() {
   const getMinuteDegrees = () => time.getMinutes() * 6 + time.getSeconds() * 0.1;
   const getSecondDegrees = () => time.getSeconds() * 6;
 
-  const handleAction = (type) => {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString("es-MX", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-    setLastAction(type);
-    setActionMessage(
-      type === "entrada"
-        ? `✅ Entrada registrada — ${timeStr}`
-        : `🔴 Salida aplicada — ${timeStr}`
+  const normalizeMatricula = (value) => {
+    const raw = String(value ?? "").trim();
+    if (!raw) return "";
+    if (!/^\d+$/.test(raw)) return raw;
+    const normalized = raw.replace(/^0+/, "");
+    return normalized || "0";
+  };
+
+  const handleAction = async (type) => {
+    const matriculaActiva = (selectedMatricula || matricula).trim();
+    if (!matriculaActiva.trim()) {
+      setActionMessage("⚠️ Escribe o selecciona una matrícula antes de registrar");
+      setShowMessage(true);
+      setTimeout(() => setShowMessage(false), 3000);
+      return;
+    }
+
+    const existeMatricula = teachers.some(
+      (teacher) =>
+        normalizeMatricula(teacher.matricula) === normalizeMatricula(matriculaActiva)
     );
-    setShowMessage(true);
-    setPulse(true);
-    setTimeout(() => setPulse(false), 600);
-    setTimeout(() => setShowMessage(false), 4000);
+
+    if (!existeMatricula) {
+      setActionMessage(`❌ La matrícula ${matriculaActiva} no existe en la base de datos`);
+      setShowMessage(true);
+      setTimeout(() => setShowMessage(false), 3500);
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:3000/api/records", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          matricula: matriculaActiva,
+          tipo_registro: type,
+        }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setActionMessage(`❌ ${result.error || "No se pudo registrar"}`);
+        setShowMessage(true);
+        setTimeout(() => setShowMessage(false), 3500);
+        return;
+      }
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString("es-MX", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+
+      setLastAction(type);
+      setActionMessage(
+        type === "entrada"
+          ? `✅ Entrada registrada — ${timeStr} | Matrícula: ${matriculaActiva}`
+          : `🔴 Salida aplicada — ${timeStr} | Matrícula: ${matriculaActiva}`
+      );
+      setShowMessage(true);
+      setPulse(true);
+      setTimeout(() => setPulse(false), 600);
+      setTimeout(() => setShowMessage(false), 4000);
+    } catch {
+      setActionMessage("❌ No se pudo conectar con el servidor");
+      setShowMessage(true);
+      setTimeout(() => setShowMessage(false), 3500);
+    }
   };
 
   const dateStr = formatDate(time);
@@ -197,22 +278,51 @@ export default function Clock() {
           </div>
         </div>
 
-        {/* Digital time */}
-        <div style={styles.digitalTime}>{formatTime(time)}</div>
-        <div style={styles.dateText}>{capitalizedDate}</div>
+        <div style={styles.inputBlock}>
+          <input
+            type="text"
+            placeholder="Escribe la matrícula del maestro"
+            value={matricula}
+            onChange={(e) => {
+              const value = e.target.value;
+              setMatricula(value);
+              const existe = teachers.some(
+                (teacher) =>
+                  normalizeMatricula(teacher.matricula) === normalizeMatricula(value)
+              );
+              setSelectedMatricula(existe ? value.trim() : "");
+            }}
+            style={styles.matriculaInput}
+          />
 
-        {/* Action feedback */}
-        <div
-          style={{
-            ...styles.feedbackBanner,
-            opacity: showMessage ? 1 : 0,
-            transform: showMessage ? "translateY(0) scale(1)" : "translateY(10px) scale(0.97)",
-            pointerEvents: showMessage ? "auto" : "none",
-          }}
-        >
-          <span style={{ fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.03em" }}>
+          <select
+            value={selectedMatricula}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedMatricula(value);
+              setMatricula(value);
+            }}
+            style={styles.matriculaSelect}
+          >
+            <option value="" style={styles.matriculaOption}>Selecciona matrícula - nombre completo</option>
+            {teachers.map((teacher) => (
+              <option key={teacher.matricula} value={teacher.matricula} style={styles.matriculaOption}>
+                {teacher.matricula} - {teacher.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div style={styles.messageSlot}>
+          <div
+            style={{
+              ...styles.inlineToast,
+              opacity: showMessage ? 1 : 0,
+              transform: showMessage ? "translateY(0) scale(1)" : "translateY(8px) scale(0.98)",
+            }}
+          >
             {actionMessage}
-          </span>
+          </div>
         </div>
 
         {/* Buttons */}
@@ -250,14 +360,17 @@ export default function Clock() {
           </button>
         </div>
 
-        {lastAction && (
-          <div style={styles.lastActionInfo}>
-            Último registro:{" "}
-            <span style={{ color: "#f0c02f", fontWeight: 600 }}>
-              {lastAction === "entrada" ? "Entrada" : "Salida"}
-            </span>
-          </div>
-        )}
+        <div
+          style={{
+            ...styles.lastActionInfo,
+            visibility: lastAction ? "visible" : "hidden",
+          }}
+        >
+          Último registro:{" "}
+          <span style={{ color: "#f0c02f", fontWeight: 600 }}>
+            {lastAction === "entrada" ? "Entrada" : "Salida"}
+          </span>
+        </div>
       </div>
 
       {/* Footer */}
@@ -537,10 +650,76 @@ const styles = {
     justifyContent: "center",
     minWidth: "320px",
   },
+  messageSlot: {
+    width: "420px",
+    maxWidth: "90vw",
+    height: "56px",
+    marginBottom: "10px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  inlineToast: {
+    background: "rgba(240,192,47,0.14)",
+    border: "1px solid rgba(240,192,47,0.45)",
+    borderRadius: "10px",
+    padding: "10px 16px",
+    color: "#fff",
+    backdropFilter: "blur(10px)",
+    minHeight: "44px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    height: "44px",
+    boxShadow: "0 10px 28px rgba(0,0,0,0.35)",
+    transition: "opacity 0.35s ease, transform 0.35s ease",
+    pointerEvents: "none",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  inputBlock: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+    width: "420px",
+    maxWidth: "90vw",
+    marginBottom: "16px",
+    flexShrink: 0,
+  },
+  matriculaInput: {
+    width: "100%",
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(240,192,47,0.35)",
+    borderRadius: "10px",
+    color: "#fff",
+    padding: "11px 12px",
+    fontSize: "0.88rem",
+    outline: "none",
+  },
+  matriculaSelect: {
+    width: "100%",
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(240,192,47,0.35)",
+    borderRadius: "10px",
+    color: "#fff",
+    padding: "11px 12px",
+    fontSize: "0.88rem",
+    outline: "none",
+  },
+  matriculaOption: {
+    color: "#1a1a32",
+    background: "#ffffff",
+  },
   buttonRow: {
     display: "flex",
     gap: "20px",
+    width: "420px",
+    maxWidth: "90vw",
     marginBottom: "16px",
+    flexShrink: 0,
   },
   btnEntrada: {
     padding: "16px 44px",
@@ -583,6 +762,7 @@ const styles = {
     fontSize: "0.78rem",
     color: "rgba(255,255,255,0.35)",
     letterSpacing: "0.05em",
+    minHeight: "18px",
   },
   footer: {
     padding: "16px",
