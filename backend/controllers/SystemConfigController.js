@@ -4,8 +4,9 @@ const {
     createConfig,
     updateConfig,
     deleteConfig,
-    getworkdays,    
-    updateworkday   
+    getworkdays,
+    updateworkday,
+    createworkday   // ✅ CORREGIDO: faltaba esta importación
 } = require('../models/SystemConfigModel');
 
 // Manejador para obtener todas las configuraciones

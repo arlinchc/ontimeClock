@@ -63,27 +63,27 @@ exports.deleteConfig = async (id) => {
     return { message: 'Configuración eliminada' };
 };
 
-// ── Work Days (Tabla: "Work_Days") ──
+// ── Work Days (Tabla: "work_days") ──
 exports.getworkdays = async () => {
     const result = await pool.query('SELECT * FROM "work_days"');
     return result.rows;
 };
 
-exports.updateworkday = async (id, { nombre, dia, hora_inicio, hora_fin, duracion_bloque, activo }) => {
+exports.updateworkday = async (id, { nombre, dia, hora_inicio, hora_fin, activo }) => {
     const result = await pool.query(
         `UPDATE "work_days" 
-         SET nombre=$1, dia=$2, hora_inicio=$3, hora_fin=$4, duracion_bloque=$5, activo=$6
-         WHERE id=$7 RETURNING *`,
-        [nombre, dia, hora_inicio, hora_fin, duracion_bloque, activo, id]
+         SET nombre=$1, dia=$2, hora_inicio=$3, hora_fin=$4, activo=$5
+         WHERE id=$6 RETURNING *`,
+        [nombre, dia, hora_inicio, hora_fin, activo, id]
     );
     return result.rows[0];
 };
 
-exports.createworkday = async ({ nombre, dia, hora_inicio, hora_fin, duracion_bloque, activo }) => {
+exports.createworkday = async ({ nombre, dia, hora_inicio, hora_fin, activo }) => {
     const result = await pool.query(
-        `INSERT INTO "work_days" (nombre, dia, hora_inicio, hora_fin, duracion_bloque, activo)
-         VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-        [nombre, dia, hora_inicio, hora_fin, duracion_bloque, activo]
+        `INSERT INTO "work_days" (nombre, dia, hora_inicio, hora_fin, activo)
+         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+        [nombre, dia, hora_inicio, hora_fin, activo]
     );
     return result.rows[0];
 };
