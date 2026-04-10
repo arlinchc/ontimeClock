@@ -16,10 +16,10 @@ async function createSchedulesTable() {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log('✓ Таблица schedules успешно создана');
+        console.log('Done');
         process.exit(0);
     } catch (error) {
-        console.error('Ошибка при создании таблицы:', error);
+        console.error('Error:', error);
         process.exit(1);
     }
 }
