@@ -1,26 +1,21 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "index.js",
-  "description": "",
+  "description": "Backend onTimeClock",
   "main": "server.js",
+  "type": "commonjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "test": "echo \"No tests\" && exit 0"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-  "type": "commonjs",
-  "dependencies": {
-    "cord": "^1.0.1",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
-    "express": "^5.2.1",
+    "express": "^4.19.2",
     "pg": "^8.20.0"
-  },
-  "description": ""
-}
   }
 }
