@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 
-
 const avatarColors = [
   ["#1E3A8A", "#FBBF24"],
   ["#1D4ED8", "#F59E0B"],
@@ -39,7 +38,9 @@ export default function Teachers() {
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
-        const response = await fetch("https://ontimeclock.onrender.com/api/teachers");
+        const response = await fetch(
+          "https://ontimeclock.onrender.com/api/teachers",
+        );
         const data = await response.json();
         setTeachers(Array.isArray(data) ? data : data.data || []);
       } catch (error) {
@@ -51,12 +52,16 @@ export default function Teachers() {
   }, []);
 
   const filtered = teachers
-    .filter((t) => statusFilter === "Todos" || t.status === statusFilter)
     .filter(
       (t) =>
-        t.name.toLowerCase().includes(search.toLowerCase()) ||
-        t.subject.toLowerCase().includes(search.toLowerCase()) ||
-        t.email.toLowerCase().includes(search.toLowerCase()),
+        statusFilter === "Todos" ||
+        t.status?.toLowerCase() === statusFilter.toLowerCase(),
+    )
+    .filter(
+      (t) =>
+        (t.name || "").toLowerCase().includes(search.toLowerCase()) ||
+        (t.subject || "").toLowerCase().includes(search.toLowerCase()) ||
+        (t.email || "").toLowerCase().includes(search.toLowerCase()),
     )
     .sort((a, b) => {
       const va = a[sortField] || "";
@@ -111,29 +116,31 @@ export default function Teachers() {
 
   const handleSave = async () => {
     if (!form.name.trim()) return;
-    
+
     // Validar que status tenga valor
     const formData = {
       ...form,
       status: form.status || "Activo",
     };
-    
+
     try {
       if (modalMode === "edit") {
         // Actualizar docente
-        const response = await fetch(`https://ontimeclock.onrender.com/api/teachers/${selectedTeacher.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
-        
+        const response = await fetch(
+          `https://ontimeclock.onrender.com/api/teachers/${selectedTeacher.id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
+          },
+        );
+
         const result = await response.json();
-        if (!response.ok) throw new Error(result.message || "Error al actualizar");
-        
+        if (!response.ok)
+          throw new Error(result.message || "Error al actualizar");
+
         setTeachers((prev) =>
-          prev.map((t) =>
-            t.id === selectedTeacher.id ? result.data : t,
-          ),
+          prev.map((t) => (t.id === selectedTeacher.id ? result.data : t)),
         );
       } else {
         // Crear nuevo docente
@@ -143,17 +150,20 @@ export default function Teachers() {
           .join("")
           .slice(0, 2)
           .toUpperCase();
-          
-        const response = await fetch("https://ontimeclock.onrender.com/api/teachers", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...formData, avatar: initials }),
-        });
-        
+
+        const response = await fetch(
+          "https://ontimeclock.onrender.com/api/teachers",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...formData, avatar: initials }),
+          },
+        );
+
         const result = await response.json();
         console.log("Response:", result);
         if (!response.ok) throw new Error(result.message || "Error al crear");
-        
+
         setTeachers((prev) => [...prev, result.data]);
       }
       setShowModal(false);
@@ -166,12 +176,15 @@ export default function Teachers() {
   const handleDelete = async (id) => {
     if (window.confirm("¿Estás seguro de que deseas eliminar este docente?")) {
       try {
-        const response = await fetch(`https://ontimeclock.onrender.com/api/teachers/${id}`, {
-          method: "DELETE",
-        });
-        
+        const response = await fetch(
+          `https://ontimeclock.onrender.com/api/teachers/${id}`,
+          {
+            method: "DELETE",
+          },
+        );
+
         if (!response.ok) throw new Error("Error al eliminar");
-        
+
         setTeachers((prev) => prev.filter((t) => t.id !== id));
       } catch (error) {
         console.error("Error al eliminar:", error);
@@ -562,8 +575,12 @@ export default function Teachers() {
                 </tr>
               ) : (
                 filtered.map((t, idx) => {
-                  const sc = statusConfig[t.status] || statusConfig.Activo;
-                  const ac = avatarColors[t.id % avatarColors.length];
+                  const normalizedStatus =
+                    t.status?.charAt(0).toUpperCase() + t.status?.slice(1);
+
+                  const sc =
+                    statusConfig[normalizedStatus] || statusConfig.Activo;
+                  const ac = avatarColors[(t.id || 0) % avatarColors.length];
                   return (
                     <tr
                       key={t.id}
@@ -689,7 +706,9 @@ export default function Teachers() {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {new Date(t.joined).toISOString().split("T")[0]}
+                        {t.created_at
+                          ? new Date(t.created_at).toLocaleDateString()
+                          : "—"}
                       </td>
                       {/* Actions */}
                       <td style={{ padding: "13px 16px" }}>
@@ -947,7 +966,13 @@ export default function Teachers() {
             </div>
 
             {/* Modal body */}
-            <div style={{ padding: "24px 28px", overflowY: "auto", maxHeight: "calc(90vh - 160px)" }}>
+            <div
+              style={{
+                padding: "24px 28px",
+                overflowY: "auto",
+                maxHeight: "calc(90vh - 160px)",
+              }}
+            >
               {modalMode === "view" && selectedTeacher ? (
                 <div>
                   {/* Avatar grande */}
@@ -1024,7 +1049,11 @@ export default function Teachers() {
                   {/* ID y Matrícula en fila */}
                   <div style={{ marginBottom: 14 }}>
                     {[
-                      { icon: "🎓", label: "Matrícula", val: selectedTeacher.matricula || "—" },
+                      {
+                        icon: "🎓",
+                        label: "Matrícula",
+                        val: selectedTeacher.matricula || "—",
+                      },
                     ].map((item, i) => (
                       <div
                         key={i}
@@ -1069,10 +1098,30 @@ export default function Teachers() {
                     }}
                   >
                     {[
-                      { icon: "📚", label: "Materia", val: selectedTeacher.subject },
-                      { icon: "📧", label: "Correo", val: selectedTeacher.email },
-                      { icon: "📞", label: "Teléfono", val: selectedTeacher.phone },
-                      { icon: "📅", label: "Fecha de Ingreso", val: selectedTeacher.joined },
+                      {
+                        icon: "📚",
+                        label: "Materia",
+                        val: selectedTeacher.subject,
+                      },
+                      {
+                        icon: "📧",
+                        label: "Correo",
+                        val: selectedTeacher.email,
+                      },
+                      {
+                        icon: "📞",
+                        label: "Teléfono",
+                        val: selectedTeacher.phone,
+                      },
+                      {
+                        icon: "📅",
+                        label: "Fecha de Ingreso",
+                        val: selectedTeacher.created_at
+                          ? new Date(
+                              selectedTeacher.created_at,
+                            ).toLocaleDateString()
+                          : "—",
+                      },
                     ].map((item, i) => (
                       <div
                         key={i}
