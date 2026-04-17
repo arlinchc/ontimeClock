@@ -1,25 +1,39 @@
+// Rutas para la gestión de docentes
+
 const express = require('express');
 const router = express.Router();
-const controller = require('../controllers/teachersController');
+const teachersController = require("../controllers/teachersControllers");
 
-router.get('/', controller.getTeachers);
-router.post('/', controller.createTeacher);
-router.get('/:id', controller.getTeacherById);
-router.put('/:id', controller.updateTeacher);
-router.delete('/:id', controller.deleteTeacher);
-router.post('/add/teacher/', controller.newTeacher)
+/**
+ * @route   GET /api/teachers
+ * @desc    Obtener todos los docentes
+ * @access  Public
+ */
+router.get('/', teachersController.getAllTeachers);
 
+/**
+ * @route   POST /api/teachers
+ * @desc    Agregar un nuevo docente
+ * @body    { name, subject, email, phone, degree, status, avatar }
+ * @access  Public
+ */
+router.post('/', teachersController.createTeacher);
 
-const {
-getTeachers,
-createTeacher,
-updateTeacher,
-deleteTeacher
+/**
+ * @route   PUT /api/teachers/:id
+ * @desc    Editar un docente existente
+ * @param   id — ID del docente
+ * @body    { name, subject, email, phone, degree, status, avatar }
+ * @access  Public
+ */
+router.put('/:id', teachersController.updateTeacher);
 
-} = require('../controllers/teachersControllers');
+/**
+ * @route   DELETE /api/teachers/:id
+ * @desc    Borrar un docente
+ * @param   id — ID del docente
+ * @access  Public
+ */
+router.delete('/:id', teachersController.deleteTeacher);
 
-router.get("/", getTeachers);
-router.post("/", createTeacher);
-router.put("/:matricula", updateTeacher);
-router.delete("/:matricula", deleteTeacher);
 module.exports = router;

@@ -24,6 +24,7 @@ export default function Teachers() {
   const [modalMode, setModalMode] = useState("add"); // "add" | "view" | "edit"
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [form, setForm] = useState({
+    matricula: "",
     name: "",
     subject: "",
     email: "",
@@ -40,9 +41,10 @@ export default function Teachers() {
       try {
         const response = await fetch("http://localhost:3000/api/teachers");
         const data = await response.json();
-        setTeachers(data);
+        setTeachers(Array.isArray(data) ? data : data.data || []);
       } catch (error) {
         console.error("Error al cargar datos", error);
+        setTeachers([]);
       }
     };
     fetchTeachers();
@@ -70,16 +72,20 @@ export default function Teachers() {
     }
   };
 
+  const emptyForm = {
+    matricula: "",
+    name: "",
+    subject: "",
+    email: "",
+    phone: "",
+    degree: "",
+    status: "Activo",
+    avatar: "",
+  };
+
   const openAdd = () => {
     setModalMode("add");
-    setForm({
-      name: "",
-      subject: "",
-      email: "",
-      phone: "",
-      degree: "",
-      status: "Activo",
-    });
+    setForm(emptyForm);
     setShowModal(true);
   };
   const openView = (t) => {
@@ -91,50 +97,86 @@ export default function Teachers() {
     setModalMode("edit");
     setSelectedTeacher(t);
     setForm({
+      matricula: t.matricula || "",
       name: t.name,
       subject: t.subject,
       email: t.email,
       phone: t.phone,
       degree: t.degree,
       status: t.status,
-      avatar: t.avatar
+      avatar: t.avatar || "",
     });
     setShowModal(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name.trim()) return;
-    if (modalMode === "edit") {
-      // Editar docente existente
-      setTeachers((prev) =>
-        prev.map((t) =>
-          t.id === selectedTeacher.id ? { ...selectedTeacher, ...form } : t,
-        ),
-      );
-    } else {
-      // Agregar nuevo docente
-      const initials = form.name
-        .split(" ")
-        .map((w) => w[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase();
-      setTeachers((prev) => [
-        ...prev,
-        {
-          ...form,
-          id: Date.now(),
-          avatar: initials,
-          joined: new Date().toISOString().split("T")[0],
-        },
-      ]);
+    
+    // Validar que status tenga valor
+    const formData = {
+      ...form,
+      status: form.status || "Activo",
+    };
+    
+    try {
+      if (modalMode === "edit") {
+        // Actualizar docente
+        const response = await fetch(`http://localhost:3000/api/teachers/${selectedTeacher.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+        
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Error al actualizar");
+        
+        setTeachers((prev) =>
+          prev.map((t) =>
+            t.id === selectedTeacher.id ? result.data : t,
+          ),
+        );
+      } else {
+        // Crear nuevo docente
+        const initials = form.name
+          .split(" ")
+          .map((w) => w[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase();
+          
+        const response = await fetch("http://localhost:3000/api/teachers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...formData, avatar: initials }),
+        });
+        
+        const result = await response.json();
+        console.log("Response:", result);
+        if (!response.ok) throw new Error(result.message || "Error al crear");
+        
+        setTeachers((prev) => [...prev, result.data]);
+      }
+      setShowModal(false);
+    } catch (error) {
+      console.error("Error al guardar:", error);
+      alert(`Error: ${error.message}`);
     }
-    setShowModal(false);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm("¿Estás seguro de que deseas eliminar este docente?")) {
-      setTeachers((prev) => prev.filter((t) => t.id !== id));
+      try {
+        const response = await fetch(`http://localhost:3000/api/teachers/${id}`, {
+          method: "DELETE",
+        });
+        
+        if (!response.ok) throw new Error("Error al eliminar");
+        
+        setTeachers((prev) => prev.filter((t) => t.id !== id));
+      } catch (error) {
+        console.error("Error al eliminar:", error);
+        alert("Error al eliminar el docente");
+      }
     }
   };
 
@@ -370,7 +412,6 @@ export default function Teachers() {
           alignItems: "center",
         }}
       >
-        {/* Search */}
         <div style={{ position: "relative", flex: "1 1 260px", minWidth: 200 }}>
           <svg
             style={{
@@ -409,7 +450,6 @@ export default function Teachers() {
           />
         </div>
 
-        {/* Status filter */}
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {["Todos", "Activo", "Inactivo", "Licencia"].map((s) => (
             <button
@@ -435,7 +475,6 @@ export default function Teachers() {
           ))}
         </div>
 
-        {/* Results count */}
         <div
           style={{
             marginLeft: "auto",
@@ -472,7 +511,11 @@ export default function Teachers() {
                   { label: "Docente", field: "name" },
                   { label: "Materia", field: "subject" },
                   { label: "Correo", field: "email" },
+<<<<<<< HEAD
                   { label: "Teléfono", field: "phone" },
+=======
+                  { label: "Teléfono", field: null },
+>>>>>>> feature-isaac
                   { label: "Estado", field: "status" },
                   { label: "Ingreso", field: "joined" },
                   { label: "Acciones", field: null },
@@ -820,6 +863,8 @@ export default function Teachers() {
               borderRadius: 18,
               width: "100%",
               maxWidth: 520,
+              maxHeight: "90vh",
+              overflowY: "auto",
               boxShadow: "0 24px 64px rgba(0,0,0,0.22)",
               overflow: "hidden",
             }}
@@ -906,8 +951,8 @@ export default function Teachers() {
             </div>
 
             {/* Modal body */}
-            <div style={{ padding: "24px 28px" }}>
-              {modalMode === "view" && selectedTeacher && !form.name ? (
+            <div style={{ padding: "24px 28px", overflowY: "auto", maxHeight: "calc(90vh - 160px)" }}>
+              {modalMode === "view" && selectedTeacher ? (
                 <div>
                   {/* Avatar grande */}
                   <div
@@ -979,6 +1024,47 @@ export default function Teachers() {
                       </span>
                     </div>
                   </div>
+
+                  {/* ID y Matrícula en fila */}
+                  <div style={{ marginBottom: 14 }}>
+                    {[
+                      { icon: "🎓", label: "Matrícula", val: selectedTeacher.matricula || "—" },
+                    ].map((item, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          background: "#EFF6FF",
+                          borderRadius: 10,
+                          padding: "12px 14px",
+                          border: "1px solid #BFDBFE",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: "#3B82F6",
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.07em",
+                            marginBottom: 4,
+                          }}
+                        >
+                          {item.icon} {item.label}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 14,
+                            color: "#1D4ED8",
+                            fontWeight: 700,
+                            fontFamily: "monospace",
+                          }}
+                        >
+                          {item.val}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
                   <div
                     style={{
                       display: "grid",
@@ -987,26 +1073,10 @@ export default function Teachers() {
                     }}
                   >
                     {[
-                      {
-                        icon: "📚",
-                        label: "Materia",
-                        val: selectedTeacher.subject,
-                      },
-                      {
-                        icon: "📧",
-                        label: "Correo",
-                        val: selectedTeacher.email,
-                      },
-                      {
-                        icon: "📞",
-                        label: "Teléfono",
-                        val: selectedTeacher.phone,
-                      },
-                      {
-                        icon: "📅",
-                        label: "Fecha de Ingreso",
-                        val: selectedTeacher.joined,
-                      },
+                      { icon: "📚", label: "Materia", val: selectedTeacher.subject },
+                      { icon: "📧", label: "Correo", val: selectedTeacher.email },
+                      { icon: "📞", label: "Teléfono", val: selectedTeacher.phone },
+                      { icon: "📅", label: "Fecha de Ingreso", val: selectedTeacher.joined },
                     ].map((item, i) => (
                       <div
                         key={i}
@@ -1046,6 +1116,44 @@ export default function Teachers() {
                 <div
                   style={{ display: "flex", flexDirection: "column", gap: 16 }}
                 >
+                  {/* ── Matrícula ── */}
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: 12.5,
+                        fontWeight: 700,
+                        color: "#374151",
+                        marginBottom: 6,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                      }}
+                    >
+                      🎓 Matrícula
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej. MAT-2024-001"
+                      value={form.matricula}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, matricula: e.target.value }))
+                      }
+                      style={{
+                        width: "100%",
+                        height: 40,
+                        border: "1.5px solid #BFDBFE",
+                        borderRadius: 9,
+                        padding: "0 14px",
+                        fontSize: 13.5,
+                        color: "#1D4ED8",
+                        background: "#EFF6FF",
+                        fontFamily: "monospace",
+                        fontWeight: 600,
+                      }}
+                    />
+                  </div>
+
+                  {/* ── Resto de campos ── */}
                   {[
                     {
                       label: "Nombre Completo",

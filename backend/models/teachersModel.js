@@ -1,39 +1,69 @@
- //Modelo para acceso a la base de datos de los profesores
+//Modelo para acceso a la base de datos de los profesores
 
- const pool = require('../config/db');
- 
- exports.getAllTeachers = async () => {
+const pool = require('../config/db.js'); // Asume que tienes conexión a DB
 
-    const result = await pool.query('SELECT * FROM teachers order by name');
-    return result.rows;
- }
+// GET — Obtener todos los docentes
+const getAllTeachers = async () => {
+    try {
+        const query = 'SELECT * FROM teachers ORDER BY id DESC';
+        const result = await pool.query(query);
+        return result.rows;
+    } catch (error) {
+        throw error;
+    }
+};
 
-exports.createTeacher = async (teacher) => {
-    const {name, subject, email, phone, degree, status, avatar} = teacher;
+// POST — Crear nuevo docente
+const createTeacher = async (teacherData) => {
+    try {
+        const { matricula, name, subject, email, phone, degree, status, avatar } = teacherData;
+        
+        const query = `
+            INSERT INTO teachers (matricula, name, subject, email, phone, degree, status, avatar)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING *
+        `;
+        
+        const result = await pool.query(query, [matricula, name, subject, email, phone, degree, status, avatar]);
+        return result.rows[0];
+    } catch (error) {
+        throw error;
+    }
+};
 
-    const result = await pool.query(
-        "INSERT INTO teachers (name, subject, email, phone, degree, status, avatar) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
-        [name, subject, email, phone, degree, status, avatar]
-    );
-    return result.rows[0];
-}
+// PUT — Actualizar docente
+const updateTeacher = async (id, teacherData) => {
+    try {
+        const { matricula, name, subject, email, phone, degree, status, avatar } = teacherData;
+        
+        const query = `
+            UPDATE teachers 
+            SET matricula = $1, name = $2, subject = $3, email = $4, phone = $5, degree = $6, status = $7, avatar = $8
+            WHERE id = $9
+            RETURNING *
+        `;
+        
+        const result = await pool.query(query, [matricula, name, subject, email, phone, degree, status, avatar, id]);
+        return result.rows[0];
+    } catch (error) {
+        throw error;
+    }
+};
 
-exports.updateTeacher = async (id, teacher) => {
-    const {name, subject, email, phone, degree, status, avatar} = teacher;
+// DELETE — Eliminar docente
+const deleteTeacher = async (id) => {
+    try {
+        const query = 'DELETE FROM teachers WHERE id = $1 RETURNING *';
+        const result = await pool.query(query, [id]);
+        return result.rows[0];
+    } catch (error) {
+        throw error;
+    }
+};
 
-    const result = await pool.query(
-        "UPDATE teachers SET name = $1, subject = $2, email = $3, phone = $4, degree = $5, status = $6, avatar = $7 WHERE id = $8 RETURNING *",
-        [name, subject, email, phone, degree, status, avatar, id]       
-    );
-    return result.rows[0];
-}
-
-exports.deteleTeacher = async (id) => {
-    await pool.query(
-        "DELETE FROM teachers WHERE id=$1",
-        [id]
-    )
-    return {message: "Docente borrado.."}
-}
-
-
+module.exports = {
+    getAllTeachers,
+    createTeacher,
+    updateTeacher,
+    deleteTeacher,
+};
