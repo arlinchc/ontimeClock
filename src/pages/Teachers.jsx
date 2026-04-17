@@ -511,11 +511,7 @@ export default function Teachers() {
                   { label: "Docente", field: "name" },
                   { label: "Materia", field: "subject" },
                   { label: "Correo", field: "email" },
-<<<<<<< HEAD
                   { label: "Teléfono", field: "phone" },
-=======
-                  { label: "Teléfono", field: null },
->>>>>>> feature-isaac
                   { label: "Estado", field: "status" },
                   { label: "Ingreso", field: "joined" },
                   { label: "Acciones", field: null },
