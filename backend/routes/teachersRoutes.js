@@ -9,4 +9,17 @@ router.put('/:id', controller.updateTeacher);
 router.delete('/:id', controller.deleteTeacher);
 router.post('/add/teacher/', controller.newTeacher)
 
+
+const {
+getTeachers,
+createTeacher,
+updateTeacher,
+deleteTeacher
+
+} = require('../controllers/teachersControllers');
+
+router.get("/", getTeachers);
+router.post("/", createTeacher);
+router.put("/:matricula", updateTeacher);
+router.delete("/:matricula", deleteTeacher);
 module.exports = router;
