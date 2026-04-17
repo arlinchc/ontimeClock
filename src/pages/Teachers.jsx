@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
 
+const initialTeachers = [
+    { id: 1, name: "Leydi Xequeb", subject: "Matemáticas", email: "l.xequeb@universidad.edu", phone: "+502 5555-0101", status: "Activo", degree: "MSc. Matemáticas Aplicadas", joined: "2019-03-15", avatar: "LX" },
+    { id: 2, name: "Irvin Chan", subject: "Programación", email: "i.chan@universidad.edu", phone: "+502 5555-0202", status: "Activo", degree: "Ing. en Sistemas", joined: "2020-08-01", avatar: "IC" },
+    { id: 3, name: "Marcos Rivera", subject: "Fe y Mundo", email: "m.rivera@universidad.edu", phone: "+502 5555-0303", status: "Activo", degree: "Lic. Teología", joined: "2018-01-20", avatar: "MR" },
+    { id: 4, name: "Sandra López", subject: "Física", email: "s.lopez@universidad.edu", phone: "+502 5555-0404", status: "Inactivo", degree: "PhD. Física Teórica", joined: "2017-06-10", avatar: "SL" },
+    { id: 5, name: "Carlos Menéndez", subject: "Química", email: "c.menendez@universidad.edu", phone: "+502 5555-0505", status: "Activo", degree: "MSc. Química Industrial", joined: "2021-02-28", avatar: "CM" },
+    { id: 6, name: "Ana Fuentes", subject: "Inglés", email: "a.fuentes@universidad.edu", phone: "+502 5555-0606", status: "Licencia", degree: "BA. Lenguas Modernas", joined: "2016-09-05", avatar: "AF" },
+];
+
 const avatarColors = [
   ["#1E3A8A", "#FBBF24"],
   ["#1D4ED8", "#F59E0B"],

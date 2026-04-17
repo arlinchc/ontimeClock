@@ -1,27 +1,38 @@
-//controlador para invocar al modelo
-const teacherModel = require("../models/teachersModel");
+const teacherModel = require('../models/teachesModel');
 
-exports.getTeachers = async(req, res) => {
+
+exports.getTeachers = async (req, res) => {
     const teachers = await teacherModel.getAllTeachers();
     res.json(teachers);
 }
 
-exports.createTeacher =  async(req, res) => {
-   const teacher = await teacherModel.createTeacher(req.body);
-   res.json(teacher);
+exports.newTeacher = async (req, res) => {
+    const { name, email, phone, mat } = req.body;
+    const newTeacher = await teacherModel.newTeacheradd({ name, email, phone, mat });
+    res.status(201).json(newTeacher);
 }
 
-exports.updateTeacher =  async(req, res) => {
-    const teacher = await teacherModel.updateTeacher(
-        req.params.id,
-        req.body
-    );
+exports.getTeacherById = async (req, res) => {
+    const { id } = req.params;
+    const teacher = await teacherModel.getTeacherById(id);
     res.json(teacher);
 }
 
-exports.deleteTeacher =  async(req, res) => {
-    const result = await teacherModel.deleteTeacher(req.params.id);
-    res.json(result);
+exports.createTeacher = async (req, res) => {
+    const { name, subject, email, phone, degree, status, avatar } = req.body;
+    const newTeacher = await teacherModel.createTeacher({ name, subject, email, phone, degree, status, avatar });
+    res.status(201).json(newTeacher);
 }
 
+exports.updateTeacher = async (req, res) => {
+    const { id } = req.params;
+    const { name, subject, email, phone, degree, status, avatar } = req.body;
+    const updatedTeacher = await teacherModel.updateTeacher(id, { name, subject, email, phone, degree, status, avatar });
+    res.json(updatedTeacher);
+}
 
+exports.deleteTeacher = async (req, res) => {
+    const { id } = req.params;
+    await teacherModel.deleteTeacher(id);
+    res.status(204).end();
+}
