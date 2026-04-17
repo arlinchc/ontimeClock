@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const API = "http://localhost:3000/api/systemconfig";
+const API = "https://ontimeclock.onrender.com/api/systemconfig";
 
 // ─── Paleta de colores y estilos base ───────────────────────────────────────
 const styles = {

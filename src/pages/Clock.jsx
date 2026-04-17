@@ -39,7 +39,7 @@ export default function Clock() {
   useEffect(() => {
     const loadTeachers = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/teachers");
+        const response = await fetch("https://ontimeclock.onrender.com/api/teachers");
         if (!response.ok) return;
         const data = await response.json();
         if (Array.isArray(data)) {
@@ -111,7 +111,7 @@ export default function Clock() {
     }
 
     try {
-      const response = await fetch("http://localhost:3000/api/records", {
+      const response = await fetch("https://ontimeclock.onrender.com/api/records", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

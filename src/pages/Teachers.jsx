@@ -39,7 +39,7 @@ export default function Teachers() {
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/teachers");
+        const response = await fetch("https://ontimeclock.onrender.com/api/teachers");
         const data = await response.json();
         setTeachers(Array.isArray(data) ? data : data.data || []);
       } catch (error) {
@@ -121,7 +121,7 @@ export default function Teachers() {
     try {
       if (modalMode === "edit") {
         // Actualizar docente
-        const response = await fetch(`http://localhost:3000/api/teachers/${selectedTeacher.id}`, {
+        const response = await fetch(`https://ontimeclock.onrender.com/api/teachers/${selectedTeacher.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
@@ -144,7 +144,7 @@ export default function Teachers() {
           .slice(0, 2)
           .toUpperCase();
           
-        const response = await fetch("http://localhost:3000/api/teachers", {
+        const response = await fetch("https://ontimeclock.onrender.com/api/teachers", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...formData, avatar: initials }),
@@ -166,7 +166,7 @@ export default function Teachers() {
   const handleDelete = async (id) => {
     if (window.confirm("¿Estás seguro de que deseas eliminar este docente?")) {
       try {
-        const response = await fetch(`http://localhost:3000/api/teachers/${id}`, {
+        const response = await fetch(`https://ontimeclock.onrender.com/api/teachers/${id}`, {
           method: "DELETE",
         });
         

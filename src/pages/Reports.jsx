@@ -38,7 +38,7 @@ function Reports() {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/reports?startDate=${startDate}&endDate=${endDate}`
+        `https://ontimeclock.onrender.com/api/reports?startDate=${startDate}&endDate=${endDate}`
       );
 
       const payload = await response.json().catch(() => []);
@@ -60,7 +60,7 @@ function Reports() {
       console.error("Error:", err);
       setError(
         err.message ||
-          "No se pudo conectar con el servidor. Verifica que esté corriendo en http://localhost:3000"
+          "No se pudo conectar con el servidor. Verifica que esté corriendo en https://ontimeclock.onrender.com"
       );
     } finally {
       setLoading(false);
@@ -118,7 +118,7 @@ function Reports() {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/reports/${teacherRow.matricula}/details?startDate=${startDate}&endDate=${endDate}`
+        `https://ontimeclock.onrender.com/api/reports/${teacherRow.matricula}/details?startDate=${startDate}&endDate=${endDate}`
       );
       const payload = await response.json().catch(() => []);
 
