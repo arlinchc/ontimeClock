@@ -39,16 +39,19 @@ export default function Clock() {
   useEffect(() => {
     const loadTeachers = async () => {
       try {
-        const response = await fetch("https://ontimeclock.onrender.com/api/teachers");
+        const response = await fetch(
+          "https://ontimeclock.onrender.com/api/teachers",
+        );
         if (!response.ok) return;
         const data = await response.json();
-        if (Array.isArray(data)) {
+
+        if (Array.isArray(data.data)) {
           setTeachers(
-            [...data].sort((a, b) =>
-              String(a?.nombre || "").localeCompare(String(b?.nombre || ""), "es", {
+            [...data.data].sort((a, b) =>
+              String(a?.name || "").localeCompare(String(b?.name || ""), "es", {
                 sensitivity: "base",
-              })
-            )
+              }),
+            ),
           );
         }
       } catch {
@@ -77,8 +80,10 @@ export default function Clock() {
     });
   };
 
-  const getHourDegrees = () => (time.getHours() % 12) * 30 + time.getMinutes() * 0.5;
-  const getMinuteDegrees = () => time.getMinutes() * 6 + time.getSeconds() * 0.1;
+  const getHourDegrees = () =>
+    (time.getHours() % 12) * 30 + time.getMinutes() * 0.5;
+  const getMinuteDegrees = () =>
+    time.getMinutes() * 6 + time.getSeconds() * 0.1;
   const getSecondDegrees = () => time.getSeconds() * 6;
 
   const normalizeMatricula = (value) => {
@@ -92,7 +97,9 @@ export default function Clock() {
   const handleAction = async (type) => {
     const matriculaActiva = (selectedMatricula || matricula).trim();
     if (!matriculaActiva.trim()) {
-      setActionMessage("⚠️ Escribe o selecciona una matrícula antes de registrar");
+      setActionMessage(
+        "⚠️ Escribe o selecciona una matrícula antes de registrar",
+      );
       setShowMessage(true);
       setTimeout(() => setShowMessage(false), 3000);
       return;
@@ -100,27 +107,33 @@ export default function Clock() {
 
     const existeMatricula = teachers.some(
       (teacher) =>
-        normalizeMatricula(teacher.matricula) === normalizeMatricula(matriculaActiva)
+        normalizeMatricula(teacher.matricula) ===
+        normalizeMatricula(matriculaActiva),
     );
 
     if (!existeMatricula) {
-      setActionMessage(`❌ La matrícula ${matriculaActiva} no existe en la base de datos`);
+      setActionMessage(
+        `❌ La matrícula ${matriculaActiva} no existe en la base de datos`,
+      );
       setShowMessage(true);
       setTimeout(() => setShowMessage(false), 3500);
       return;
     }
 
     try {
-      const response = await fetch("https://ontimeclock.onrender.com/api/records", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        "https://ontimeclock.onrender.com/api/records",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            matricula: matriculaActiva,
+            tipo_registro: type,
+          }),
         },
-        body: JSON.stringify({
-          matricula: matriculaActiva,
-          tipo_registro: type,
-        }),
-      });
+      );
 
       const result = await response.json().catch(() => ({}));
 
@@ -142,7 +155,7 @@ export default function Clock() {
       setActionMessage(
         type === "entrada"
           ? `✅ Entrada registrada — ${timeStr} | Matrícula: ${matriculaActiva}`
-          : `🔴 Salida aplicada — ${timeStr} | Matrícula: ${matriculaActiva}`
+          : `🔴 Salida aplicada — ${timeStr} | Matrícula: ${matriculaActiva}`,
       );
       setShowMessage(true);
       setPulse(true);
@@ -174,7 +187,10 @@ export default function Clock() {
         </div>
 
         {/* Important messages box */}
-        <div style={{ ...styles.msgBox, cursor: "pointer" }} onClick={() => setShowAllMsgs(true)}>
+        <div
+          style={{ ...styles.msgBox, cursor: "pointer" }}
+          onClick={() => setShowAllMsgs(true)}
+        >
           <div style={styles.msgHeader}>
             <span style={styles.msgDot} />
             <span style={styles.msgLabel}>AVISOS IMPORTANTES</span>
@@ -195,7 +211,8 @@ export default function Clock() {
                 key={i}
                 style={{
                   ...styles.dotIndicator,
-                  background: i === msgIndex ? "#f0c02f" : "rgba(240,192,47,0.3)",
+                  background:
+                    i === msgIndex ? "#f0c02f" : "rgba(240,192,47,0.3)",
                 }}
               />
             ))}
@@ -206,7 +223,12 @@ export default function Clock() {
       {/* Main clock area */}
       <div style={styles.centerArea}>
         {/* Analog clock */}
-        <div style={{ ...styles.clockRing, ...(pulse ? styles.clockRingPulse : {}) }}>
+        <div
+          style={{
+            ...styles.clockRing,
+            ...(pulse ? styles.clockRingPulse : {}),
+          }}
+        >
           <div style={styles.clockFace}>
             {/* Hour markers */}
             {[...Array(12)].map((_, i) => (
@@ -221,7 +243,8 @@ export default function Clock() {
                   style={{
                     ...styles.markerTick,
                     height: i % 3 === 0 ? "14px" : "7px",
-                    background: i % 3 === 0 ? "#f0c02f" : "rgba(240,192,47,0.4)",
+                    background:
+                      i % 3 === 0 ? "#f0c02f" : "rgba(240,192,47,0.4)",
                   }}
                 />
               </div>
@@ -288,7 +311,8 @@ export default function Clock() {
               setMatricula(value);
               const existe = teachers.some(
                 (teacher) =>
-                  normalizeMatricula(teacher.matricula) === normalizeMatricula(value)
+                  normalizeMatricula(teacher.matricula) ===
+                  normalizeMatricula(value),
               );
               setSelectedMatricula(existe ? value.trim() : "");
             }}
@@ -304,9 +328,15 @@ export default function Clock() {
             }}
             style={styles.matriculaSelect}
           >
-            <option value="" style={styles.matriculaOption}>Selecciona matrícula - nombre completo</option>
+            <option value="" style={styles.matriculaOption}>
+              Selecciona matrícula - nombre completo
+            </option>
             {teachers.map((teacher) => (
-              <option key={teacher.matricula} value={teacher.matricula} style={styles.matriculaOption}>
+              <option
+                key={teacher.matricula}
+                value={teacher.matricula}
+                style={styles.matriculaOption}
+              >
                 {teacher.matricula} - {teacher.nombre}
               </option>
             ))}
@@ -318,7 +348,9 @@ export default function Clock() {
             style={{
               ...styles.inlineToast,
               opacity: showMessage ? 1 : 0,
-              transform: showMessage ? "translateY(0) scale(1)" : "translateY(8px) scale(0.98)",
+              transform: showMessage
+                ? "translateY(0) scale(1)"
+                : "translateY(8px) scale(0.98)",
             }}
           >
             {actionMessage}
@@ -332,11 +364,13 @@ export default function Clock() {
             onClick={() => handleAction("entrada")}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-3px) scale(1.04)";
-              e.currentTarget.style.boxShadow = "0 12px 40px rgba(240,192,47,0.5)";
+              e.currentTarget.style.boxShadow =
+                "0 12px 40px rgba(240,192,47,0.5)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translateY(0) scale(1)";
-              e.currentTarget.style.boxShadow = "0 4px 20px rgba(240,192,47,0.25)";
+              e.currentTarget.style.boxShadow =
+                "0 4px 20px rgba(240,192,47,0.25)";
             }}
           >
             <span style={styles.btnIcon}>▶</span>
@@ -348,11 +382,13 @@ export default function Clock() {
             onClick={() => handleAction("salida")}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-3px) scale(1.04)";
-              e.currentTarget.style.boxShadow = "0 12px 40px rgba(255,80,80,0.4)";
+              e.currentTarget.style.boxShadow =
+                "0 12px 40px rgba(255,80,80,0.4)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translateY(0) scale(1)";
-              e.currentTarget.style.boxShadow = "0 4px 20px rgba(255,80,80,0.2)";
+              e.currentTarget.style.boxShadow =
+                "0 4px 20px rgba(255,80,80,0.2)";
             }}
           >
             <span style={styles.btnIcon}>■</span>
@@ -389,12 +425,19 @@ export default function Clock() {
                 <span style={styles.msgDot} />
                 <span style={styles.modalTitle}>TABLERO DE AVISOS</span>
               </div>
-              <button style={styles.modalClose} onClick={() => setShowAllMsgs(false)}>✕</button>
+              <button
+                style={styles.modalClose}
+                onClick={() => setShowAllMsgs(false)}
+              >
+                ✕
+              </button>
             </div>
             <div style={styles.modalList}>
               {IMPORTANT_MESSAGES.map((msg, i) => (
                 <div key={i} style={styles.modalItem}>
-                  <div style={styles.modalItemNum}>{String(i + 1).padStart(2, "0")}</div>
+                  <div style={styles.modalItemNum}>
+                    {String(i + 1).padStart(2, "0")}
+                  </div>
                   <div style={styles.modalItemText}>{msg}</div>
                 </div>
               ))}
@@ -526,7 +569,8 @@ const styles = {
     width: "260px",
     height: "260px",
     borderRadius: "50%",
-    background: "linear-gradient(135deg, rgba(240,192,47,0.12), rgba(26,26,50,0.8))",
+    background:
+      "linear-gradient(135deg, rgba(240,192,47,0.12), rgba(26,26,50,0.8))",
     border: "3px solid rgba(240,192,47,0.35)",
     boxShadow: `
       0 0 0 1px rgba(240,192,47,0.1),
