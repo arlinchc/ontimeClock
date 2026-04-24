@@ -6,10 +6,15 @@ const {
     deleteConfig,
     getworkdays,
     updateworkday,
-    createworkday   // ✅ CORREGIDO: faltaba esta importación
+    createworkday,
+    getAllRoles,
+    getRolById,
+    createRol,
+    updateRol,
+    deleteRol
 } = require('../models/SystemConfigModel');
 
-// Manejador para obtener todas las configuraciones
+// ── Configuración General ──
 exports.getConfigs = async (req, res) => {
     try {
         const configs = await getAllConfigs();
@@ -19,7 +24,6 @@ exports.getConfigs = async (req, res) => {
     }
 };
 
-// Manejador para obtener una configuración por ID
 exports.getConfig = async (req, res) => {
     try {
         const { id } = req.params;
@@ -60,7 +64,7 @@ exports.deleteConfig = async (req, res) => {
     }
 };
 
-// Manejadores para los días laborales (Work_Days)
+// ── Work Days ──
 exports.getworkdays = async (req, res) => {
     try {
         const days = await getworkdays();
@@ -86,5 +90,55 @@ exports.updateworkday = async (req, res) => {
         res.json(updated);
     } catch (error) {
         res.status(500).json({ error: 'Error al actualizar día laboral' });
+    }
+};
+
+// ── Roles ──
+exports.getRoles = async (req, res) => {
+    try {
+        const roles = await getAllRoles();
+        res.json(roles);
+    } catch (error) {
+        res.status(500).json({ error: 'Error al obtener roles' });
+    }
+};
+
+exports.getRol = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const rol = await getRolById(id);
+        if (!rol) return res.status(404).json({ message: 'Rol no encontrado' });
+        res.json(rol);
+    } catch (error) {
+        res.status(500).json({ error: 'Error al obtener rol' });
+    }
+};
+
+exports.createRol = async (req, res) => {
+    try {
+        const newRol = await createRol(req.body);
+        res.status(201).json(newRol);
+    } catch (error) {
+        res.status(500).json({ error: 'Error al crear rol' });
+    }
+};
+
+exports.updateRol = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updated = await updateRol(id, req.body);
+        res.json(updated);
+    } catch (error) {
+        res.status(500).json({ error: 'Error al actualizar rol' });
+    }
+};
+
+exports.deleteRol = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await deleteRol(id);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: 'Error al eliminar rol' });
     }
 };

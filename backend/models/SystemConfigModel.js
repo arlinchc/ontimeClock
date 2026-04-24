@@ -87,3 +87,37 @@ exports.createworkday = async ({ nombre, dia, hora_inicio, hora_fin, activo }) =
     );
     return result.rows[0];
 };
+
+// ── Roles (Tabla: "roles") ──
+exports.getAllRoles = async () => {
+    const result = await pool.query('SELECT * FROM roles ORDER BY id');
+    return result.rows;
+};
+
+exports.getRolById = async (id) => {
+    const result = await pool.query('SELECT * FROM roles WHERE id = $1', [id]);
+    return result.rows[0];
+};
+
+exports.createRol = async ({ nombre, permisos, usuarios, estado }) => {
+    const result = await pool.query(
+        `INSERT INTO roles (nombre, permisos, usuarios, estado)
+         VALUES ($1, $2, $3, $4) RETURNING *`,
+        [nombre, permisos, usuarios || 0, estado || 'activo']
+    );
+    return result.rows[0];
+};
+
+exports.updateRol = async (id, { nombre, permisos, usuarios, estado }) => {
+    const result = await pool.query(
+        `UPDATE roles SET nombre=$1, permisos=$2, usuarios=$3, estado=$4
+         WHERE id=$5 RETURNING *`,
+        [nombre, permisos, usuarios, estado, id]
+    );
+    return result.rows[0];
+};
+
+exports.deleteRol = async (id) => {
+    await pool.query('DELETE FROM roles WHERE id = $1', [id]);
+    return { message: 'Rol eliminado' };
+};
