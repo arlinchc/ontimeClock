@@ -55,14 +55,15 @@ export default function WeeklyView() {
     if (teacherFilter !== "all") r = r.filter(l => l.teacherId === parseInt(teacherFilter));
     if (query.trim()) {
       const q = query.toLowerCase();
+      const normalize = (value) => String(value ?? "").toLowerCase();
       r = r.filter(l => {
         const t = teachers.find(t => t.id === l.teacherId);
         return (
-          String(l.teacherId).toLowerCase().includes(q) ||
-          l.subject.toLowerCase().includes(q) ||
-          t?.name.toLowerCase().includes(q) ||
-          l.room.toLowerCase().includes(q) ||
-          l.group.toLowerCase().includes(q)
+          normalize(l.teacherId).includes(q) ||
+          normalize(l.subject).includes(q) ||
+          normalize(t?.name).includes(q) ||
+          normalize(l.room).includes(q) ||
+          normalize(l.group).includes(q)
         );
       });
     }

@@ -6,7 +6,10 @@ const {
     deleteConfig,
     getworkdays,
     updateworkday,
-    createworkday   // ✅ CORREGIDO: faltaba esta importación
+    createworkday,
+    getClosedDays,
+    createClosedDay,
+    deleteClosedDay
 } = require('../models/SystemConfigModel');
 
 // Manejador para obtener todas las configuraciones
@@ -15,6 +18,7 @@ exports.getConfigs = async (req, res) => {
         const configs = await getAllConfigs();
         res.json(configs);
     } catch (error) {
+        console.error('Error getting configs:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -27,6 +31,7 @@ exports.getConfig = async (req, res) => {
         if (!config) return res.status(404).json({ message: 'Configuración no encontrada' });
         res.json(config);
     } catch (error) {
+        console.error('Error getting config:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -36,6 +41,7 @@ exports.createConfig = async (req, res) => {
         const newConfig = await createConfig(req.body);
         res.status(201).json(newConfig);
     } catch (error) {
+        console.error('Error creating config:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -46,6 +52,7 @@ exports.updateConfig = async (req, res) => {
         const updated = await updateConfig(id, req.body);
         res.json(updated);
     } catch (error) {
+        console.error('Error updating config:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -56,6 +63,7 @@ exports.deleteConfig = async (req, res) => {
         const result = await deleteConfig(id);
         res.json(result);
     } catch (error) {
+        console.error('Error deleting config:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -66,6 +74,7 @@ exports.getworkdays = async (req, res) => {
         const days = await getworkdays();
         res.json(days);
     } catch (error) {
+        console.error('Error getting work days:', error);
         res.status(500).json({ error: 'Error al obtener días laborales' });
     }
 };
@@ -75,6 +84,7 @@ exports.createworkday = async (req, res) => {
         const newDay = await createworkday(req.body);
         res.status(201).json(newDay);
     } catch (error) {
+        console.error('Error creating work day:', error);
         res.status(500).json({ error: 'Error al crear día laboral' });
     }
 };
@@ -85,6 +95,46 @@ exports.updateworkday = async (req, res) => {
         const updated = await updateworkday(id, req.body);
         res.json(updated);
     } catch (error) {
+        console.error('Error updating work day:', error);
         res.status(500).json({ error: 'Error al actualizar día laboral' });
     }
 };
+
+exports.getClosedDays = async (req, res) => {
+    try {
+        const days = await getClosedDays();
+        res.json(days);
+    } catch (error) {
+        console.error('Error getting closed days:', error);
+        res.status(500).json({ error: 'Error al obtener días cerrados' });
+    }
+};
+
+exports.createClosedDay = async (req, res) => {
+    try {
+        const { date, reason, type } = req.body;
+        if (!date || !reason) {
+            return res.status(400).json({ error: 'date y reason son obligatorios' });
+        }
+        const created = await createClosedDay({ date, reason, type });
+        res.status(201).json(created);
+    } catch (error) {
+        console.error('Error creating closed day:', error);
+        res.status(500).json({ error: 'Error al crear día cerrado' });
+    }
+};
+
+exports.deleteClosedDay = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deleted = await deleteClosedDay(id);
+        if (!deleted) {
+            return res.status(404).json({ error: 'Día cerrado no encontrado' });
+        }
+        res.status(204).end();
+    } catch (error) {
+        console.error('Error deleting closed day:', error);
+        res.status(500).json({ error: 'Error al eliminar día cerrado' });
+    }
+};
+

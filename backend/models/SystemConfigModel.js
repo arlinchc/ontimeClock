@@ -1,5 +1,17 @@
 const pool = require('../config/db');
 
+const ensureClosedDaysTable = async () => {
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS closed_days (
+            id SERIAL PRIMARY KEY,
+            date DATE NOT NULL UNIQUE,
+            reason VARCHAR(255) NOT NULL,
+            type VARCHAR(30) NOT NULL DEFAULT 'holiday',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+};
+
 // ── Configuración General (Tabla: "system_Config") ──
 exports.getAllConfigs = async () => {
     const result = await pool.query('SELECT * FROM "system_Config" ORDER BY id');
@@ -85,5 +97,31 @@ exports.createworkday = async ({ nombre, dia, hora_inicio, hora_fin, activo }) =
          VALUES ($1, $2, $3, $4, $5) RETURNING *`,
         [nombre, dia, hora_inicio, hora_fin, activo]
     );
+    return result.rows[0];
+};
+
+// ── Closed Days (Tabla: "closed_days") ──
+exports.getClosedDays = async () => {
+    await ensureClosedDaysTable();
+    const result = await pool.query('SELECT id, date, reason, type FROM closed_days ORDER BY date');
+    return result.rows;
+};
+
+exports.createClosedDay = async ({ date, reason, type }) => {
+    await ensureClosedDaysTable();
+    const result = await pool.query(
+        `INSERT INTO closed_days (date, reason, type)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (date)
+         DO UPDATE SET reason = EXCLUDED.reason, type = EXCLUDED.type
+         RETURNING id, date, reason, type`,
+        [date, reason, type || 'holiday']
+    );
+    return result.rows[0];
+};
+
+exports.deleteClosedDay = async (id) => {
+    await ensureClosedDaysTable();
+    const result = await pool.query('DELETE FROM closed_days WHERE id = $1 RETURNING id', [id]);
     return result.rows[0];
 };

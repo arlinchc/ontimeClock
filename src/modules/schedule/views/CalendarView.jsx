@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { INITIAL_CLOSED_DAYS, TIME_SLOTS } from "../data/mockData";
+import { TIME_SLOTS } from "../data/mockData";
 import LessonModal from "../components/LessonModal";
 import { scheduleAPI } from "../../../api/scheduleAPI";
 
@@ -21,6 +21,7 @@ export default function CalendarView() {
   const [modal, setModal] = useState(null);
   const [schedules, setSchedules] = useState([]);
   const [teachers, setTeachers] = useState([]);
+  const [closedDays, setClosedDays] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,6 +32,9 @@ export default function CalendarView() {
         ]);
         setSchedules(schedulesData);
         setTeachers(teachersData);
+
+        const closedDaysData = await scheduleAPI.getClosedDays();
+        setClosedDays(closedDaysData);
       } catch (error) {
         console.error('Error loading data:', error);
       }
@@ -64,9 +68,9 @@ export default function CalendarView() {
 
   const closedMap = useMemo(() => {
     const m = {};
-    INITIAL_CLOSED_DAYS.forEach(d => { m[d.date] = d; });
+    closedDays.forEach(d => { m[d.date] = d; });
     return m;
-  }, []);
+  }, [closedDays]);
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDow    = new Date(year, month, 1).getDay();
@@ -210,7 +214,7 @@ export default function CalendarView() {
           {/* Upcoming closed days */}
           <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Días cerrados</p>
-            {INITIAL_CLOSED_DAYS.slice(0, 6).map(d => {
+            {closedDays.slice(0, 6).map(d => {
               const cfg = TYPE[d.type];
               return (
                 <div key={d.id} className="flex items-center gap-2.5 mb-2.5 last:mb-0">
@@ -224,6 +228,9 @@ export default function CalendarView() {
                 </div>
               );
             })}
+            {closedDays.length === 0 && (
+              <p className="text-xs text-gray-400">No hay días cerrados registrados</p>
+            )}
           </div>
         </div>
       </div>

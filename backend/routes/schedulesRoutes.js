@@ -5,14 +5,14 @@ const controller = require('../controllers/schedulesController');
 // Get all schedules
 router.get('/', controller.getSchedules);
 
-// Get schedule by ID
-router.get('/:id', controller.getScheduleById);
-
 // Get schedules by teacher
 router.get('/teacher/:teacherId', controller.getSchedulesByTeacher);
 
 // Get all teachers (for the form dropdown)
 router.get('/data/teachers', controller.getTeachers);
+
+// Get schedule by ID
+router.get('/:id', controller.getScheduleById);
 
 // Create new schedule
 router.post('/', controller.createSchedule);

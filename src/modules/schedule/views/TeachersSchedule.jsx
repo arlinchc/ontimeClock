@@ -36,7 +36,9 @@ export default function TeachersSchedule() {
   };
 
   const getTeacherInitials = (name) => {
-    return name.split(" ").slice(0, 2).map(n => n[0]).join("");
+    const safeName = String(name || "").trim();
+    if (!safeName) return "TE";
+    return safeName.split(" ").slice(0, 2).map(n => n[0]).join("");
   };
 
   const convertToSlot = (timeString) => {
@@ -45,12 +47,13 @@ export default function TeachersSchedule() {
   };
 
   const filtered = useMemo(() => {
-    const q = query.toLowerCase();
+    const q = String(query || "").toLowerCase();
     if (!q) return teachers;
+    const normalize = (value) => String(value ?? "").toLowerCase();
     return teachers.filter(t =>
-      t.id.toLowerCase().includes(q)         ||
-      t.name.toLowerCase().includes(q)       ||
-      t.subject.toLowerCase().includes(q)
+      normalize(t.id).includes(q) ||
+      normalize(t.name).includes(q) ||
+      normalize(t.subject).includes(q)
     );
   }, [query, teachers]);
 

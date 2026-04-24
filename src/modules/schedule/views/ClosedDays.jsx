@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { INITIAL_CLOSED_DAYS } from "../data/mockData";
+import { useEffect, useState } from "react";
+import { scheduleAPI } from "../../../api/scheduleAPI";
 
 const TYPE = {
   holiday:      { label: "Festivo Nacional",  emoji: "", bg: "#fef2f2", border: "#fecaca", text: "#b91c1c", dot: "#ef4444" },
@@ -8,16 +8,45 @@ const TYPE = {
 };
 
 export default function ClosedDays() {
-  const [days,     setDays]     = useState(INITIAL_CLOSED_DAYS);
+  const [days,     setDays]     = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form,     setForm]     = useState({ date: "", reason: "", type: "holiday" });
   const [filter,   setFilter]   = useState("all");
+  const [loading,  setLoading]  = useState(true);
 
-  const handleAdd = () => {
+  useEffect(() => {
+    const fetchClosedDays = async () => {
+      try {
+        const data = await scheduleAPI.getClosedDays();
+        setDays(data);
+      } catch (error) {
+        console.error("Error loading closed days:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchClosedDays();
+  }, []);
+
+  const handleAdd = async () => {
     if (!form.date || !form.reason) return;
-    setDays(prev => [...prev, { id: Date.now(), ...form }]);
-    setForm({ date: "", reason: "", type: "holiday" });
-    setShowForm(false);
+    try {
+      const created = await scheduleAPI.createClosedDay(form);
+      setDays(prev => [...prev, created]);
+      setForm({ date: "", reason: "", type: "holiday" });
+      setShowForm(false);
+    } catch (error) {
+      console.error("Error creating closed day:", error);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await scheduleAPI.deleteClosedDay(id);
+      setDays(prev => prev.filter(d => d.id !== id));
+    } catch (error) {
+      console.error("Error deleting closed day:", error);
+    }
   };
 
   const filtered = filter === "all" ? days : days.filter(d => d.type === filter);
@@ -77,6 +106,10 @@ export default function ClosedDays() {
 
       {/* List */}
       <div className="space-y-2">
+        {loading && (
+          <div className="text-center py-8 text-gray-400 text-sm">Cargando dias cerrados...</div>
+        )}
+
         {sorted.map(day => {
           const cfg = TYPE[day.type];
           return (
@@ -95,7 +128,7 @@ export default function ClosedDays() {
               <div className="flex items-center gap-3 flex-shrink-0">
                 <span className="hidden sm:block text-xs font-semibold" style={{ color: cfg.text }}>{cfg.label}</span>
                 <button
-                  onClick={() => setDays(prev => prev.filter(d => d.id !== day.id))}
+                  onClick={() => handleDelete(day.id)}
                   className="w-7 h-7 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-100 text-red-400 hover:text-red-600 transition-all text-xs"
                 >
                   🗑
@@ -105,7 +138,7 @@ export default function ClosedDays() {
           );
         })}
 
-        {sorted.length === 0 && (
+        {!loading && sorted.length === 0 && (
           <div className="text-center py-12 text-gray-400">
             <span className="text-3xl block mb-2">📭</span>
             <p className="text-sm">No hay días cerrados registrados</p>
