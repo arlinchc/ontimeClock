@@ -76,12 +76,12 @@ async function ensureRecordsTable() {
         );
     }
 
-    await pool.query('UPDATE records SET nombre = COALESCE(nombre, \'Sin nombre\')');
-    await pool.query('UPDATE records SET fecha = COALESCE(fecha, CURRENT_DATE)');
+    await pool.query('UPDATE records SET nombre = COALESCE(nombre, \'Sin nombre\') WHERE nombre IS NULL');
+    await pool.query('UPDATE records SET fecha = COALESCE(fecha, CURRENT_DATE) WHERE fecha IS NULL');
 
-    await pool.query('ALTER TABLE records ALTER COLUMN matricula SET NOT NULL');
-    await pool.query('ALTER TABLE records ALTER COLUMN nombre SET NOT NULL');
-    await pool.query('ALTER TABLE records ALTER COLUMN fecha SET NOT NULL');
+    try { await pool.query('ALTER TABLE records ALTER COLUMN matricula SET NOT NULL'); } catch (_) {}
+    try { await pool.query('ALTER TABLE records ALTER COLUMN nombre SET NOT NULL'); } catch (_) {}
+    try { await pool.query('ALTER TABLE records ALTER COLUMN fecha SET NOT NULL'); } catch (_) {}
 
     await pool.query(
         `DO $$
