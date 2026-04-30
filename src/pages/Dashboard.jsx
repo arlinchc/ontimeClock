@@ -13,40 +13,23 @@ const C = {
   muted:      "#64748b",
 };
 
-// ── Mock data ───────────────────────────────────────────────────
-const dailyData = [
-  { hora: "7am",  asistencias: 4  },
-  { hora: "8am",  asistencias: 12 },
-  { hora: "9am",  asistencias: 18 },
-  { hora: "10am", asistencias: 10 },
-  { hora: "11am", asistencias: 7  },
-  { hora: "12pm", asistencias: 5  },
-  { hora: "1pm",  asistencias: 3  },
-];
+const API_BASE = "https://ontimeclock.onrender.com/api";
 
-const monthlyData = [
-  { mes: "Ene", asistencias: 92, faltas: 8  },
-  { mes: "Feb", asistencias: 88, faltas: 12 },
-  { mes: "Mar", asistencias: 95, faltas: 5  },
-  { mes: "Abr", asistencias: 90, faltas: 10 },
-  { mes: "May", asistencias: 85, faltas: 15 },
-  { mes: "Jun", asistencias: 78, faltas: 22 },
-];
+function toLocalDateStr(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
-const recentActivity = [
-  { nombre: "Leydi Xequeb",   materia: "Matemáticas", hora: "08:02 AM", estado: "Entrada", tipo: "entrada" },
-  { nombre: "Irvin Chan",     materia: "Programación", hora: "08:15 AM", estado: "Entrada", tipo: "entrada" },
-  { nombre: "Marcos Riviera", materia: "Fe y Mundo",   hora: "09:05 AM", estado: "Retardo", tipo: "retardo" },
-  { nombre: "Ana Pérez",      materia: "Inglés",       hora: "09:30 AM", estado: "Entrada", tipo: "entrada" },
-  { nombre: "Luis Méndez",    materia: "Historia",     hora: "10:00 AM", estado: "Falta",   tipo: "falta"   },
-];
-
-const teachers = [
-  { nombre: "Ana Pérez",      materia: "Inglés",       asistencia: 99, avatar: "AP" },
-  { nombre: "Leydi Xequeb",   materia: "Matemáticas",  asistencia: 97, avatar: "LX" },
-  { nombre: "Irvin Chan",     materia: "Programación", asistencia: 94, avatar: "IC" },
-  { nombre: "Marcos Riviera", materia: "Fe y Mundo",   asistencia: 88, avatar: "MR" },
-];
+function fmtHour(timeStr) {
+  if (!timeStr) return "—";
+  const [h, m] = timeStr.split(":");
+  const hour = parseInt(h);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const h12 = hour % 12 || 12;
+  return `${String(h12).padStart(2, "0")}:${m} ${ampm}`;
+}
 
 // ── Contador animado ────────────────────────────────────────────
 function Counter({ target }) {
@@ -320,11 +303,95 @@ function KpiCard({ label, value, icon, sub, accent }) {
 // ── DASHBOARD ───────────────────────────────────────────────────
 function Dashboard() {
   const [activeTab, setActiveTab] = useState("diario");
+  const [teachersData, setTeachersData] = useState([]);
+  const [recordsData, setRecordsData] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`${API_BASE}/teachers`).then((r) => r.json()).catch(() => ({})),
+      fetch(`${API_BASE}/records`).then((r) => r.json()).catch(() => []),
+    ]).then(([teachersRes, recordsRes]) => {
+      setTeachersData(Array.isArray(teachersRes.data) ? teachersRes.data : []);
+      setRecordsData(Array.isArray(recordsRes) ? recordsRes : []);
+      setLoadingData(false);
+    });
+  }, []);
 
   const now = new Date();
+  const todayStr = toLocalDateStr(now);
   const dateStr = now.toLocaleDateString("es-MX", {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
+
+  // ── KPIs
+  const activeTeachers = teachersData.filter((t) => t.status === "Activo").length || teachersData.length;
+  const todayRecords = recordsData.filter((r) => r.fecha && r.fecha.startsWith(todayStr));
+  const asistenciasHoy = todayRecords.filter((r) => r.hora_entrada).length;
+  const faltasHoy = Math.max(0, activeTeachers - asistenciasHoy);
+
+  // ── Daily chart: entries grouped by hour
+  const hourBuckets = {};
+  for (let h = 7; h <= 19; h++) hourBuckets[h] = 0;
+  todayRecords.forEach((r) => {
+    if (r.hora_entrada) {
+      const hour = parseInt(r.hora_entrada.split(":")[0]);
+      if (hour in hourBuckets) hourBuckets[hour]++;
+    }
+  });
+  const dailyData = Object.entries(hourBuckets).map(([h, count]) => ({
+    hora: parseInt(h) < 12 ? `${h}am` : parseInt(h) === 12 ? "12pm" : `${parseInt(h) - 12}pm`,
+    asistencias: count,
+  }));
+
+  // ── Monthly chart: group records by month
+  const monthNames = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+  const monthMap = {};
+  recordsData.forEach((r) => {
+    if (!r.fecha) return;
+    const m = parseInt(r.fecha.split("-")[1]) - 1;
+    const key = monthNames[m];
+    if (!monthMap[key]) monthMap[key] = { mes: key, asistencias: 0, faltas: 0 };
+    if (r.hora_entrada) monthMap[key].asistencias++;
+    else monthMap[key].faltas++;
+  });
+  const monthlyData = Object.values(monthMap).length > 0
+    ? Object.values(monthMap)
+    : [{ mes: "Hoy", asistencias: asistenciasHoy, faltas: faltasHoy }];
+
+  // ── Recent activity: last 5 records
+  const recentActivity = recordsData.slice(0, 5).map((r) => {
+    const teacher = teachersData.find((t) => String(t.matricula) === String(r.matricula));
+    const hasEntry = !!r.hora_entrada;
+    const hasExit = !!r.hora_salida;
+    return {
+      nombre: r.nombre || teacher?.nombre || teacher?.name || r.matricula,
+      materia: teacher?.subject || "—",
+      hora: hasExit ? fmtHour(r.hora_salida) : hasEntry ? fmtHour(r.hora_entrada) : "—",
+      estado: hasExit ? "Salida" : hasEntry ? "Entrada" : "Falta",
+      tipo: hasExit ? "salida" : hasEntry ? "entrada" : "falta",
+    };
+  });
+
+  // ── Teacher ranking: attendance rate from all records
+  const rankMap = {};
+  recordsData.forEach((r) => {
+    const key = String(r.matricula);
+    if (!rankMap[key]) {
+      const teacher = teachersData.find((t) => String(t.matricula) === key);
+      rankMap[key] = {
+        nombre: r.nombre || teacher?.nombre || teacher?.name || key,
+        avatar: (r.nombre || key).split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase(),
+        dias: 0, entradas: 0,
+      };
+    }
+    rankMap[key].dias++;
+    if (r.hora_entrada) rankMap[key].entradas++;
+  });
+  const teachers = Object.values(rankMap)
+    .map((t) => ({ ...t, asistencia: t.dias > 0 ? Math.round((t.entradas / t.dias) * 100) : 0 }))
+    .sort((a, b) => b.asistencia - a.asistencia)
+    .slice(0, 4);
 
   return (
     <div
@@ -479,10 +546,10 @@ function Dashboard() {
 
         {/* KPI CARDS */}
         <div className="grid grid-cols-4 gap-5 mb-6">
-          <KpiCard label="Docentes Activos" value={60} icon="👨‍🏫" sub="+2 este mes"       accent={C.blueMid} />
-          <KpiCard label="Asistencias Hoy"  value={52} icon="✅"  sub="86.7% del total"   accent="#15803d"   />
-          <KpiCard label="Retardos"         value={5}  icon="⏰"  sub="3 menos que ayer"  accent="#b45309"   />
-          <KpiCard label="Faltas"           value={3}  icon="❌"  sub="5% del total"       accent="#dc2626"   />
+          <KpiCard label="Docentes Activos" value={activeTeachers} icon="👨‍🏫" sub={`${teachersData.length} registrados`} accent={C.blueMid} />
+          <KpiCard label="Asistencias Hoy"  value={asistenciasHoy} icon="✅"  sub={activeTeachers > 0 ? `${Math.round((asistenciasHoy/activeTeachers)*100)}% del total` : "—"} accent="#15803d" />
+          <KpiCard label="Registros Totales" value={recordsData.length} icon="⏰" sub={`${todayRecords.length} hoy`} accent="#b45309" />
+          <KpiCard label="Faltas Hoy"        value={faltasHoy} icon="❌" sub={activeTeachers > 0 ? `${Math.round((faltasHoy/activeTeachers)*100)}% del total` : "—"} accent="#dc2626" />
         </div>
 
         {/* CHARTS */}
