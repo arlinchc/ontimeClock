@@ -18,7 +18,7 @@ exports.createRecord = async (req, res) => {
         ) {
             res.status(400).json({ error: error.message });
         } else {
-            res.status(500).json({ error: 'Error al registrar asistencia', detail: error.message });
+            res.status(500).json({ error: 'Error al registrar asistencia' });
         }
     }
 }

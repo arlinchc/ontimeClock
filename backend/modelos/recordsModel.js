@@ -37,6 +37,22 @@ async function ensureRecordsTable() {
 
     await pool.query(createTableSql);
 
+    // Fix id column if it lacks a sequence (SERIAL) default
+    await pool.query(`
+        DO $$
+        BEGIN
+            IF EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'records'
+                  AND column_name = 'id' AND column_default IS NULL
+            ) THEN
+                CREATE SEQUENCE IF NOT EXISTS records_id_seq;
+                PERFORM setval('records_id_seq', COALESCE((SELECT MAX(id) FROM records), 0) + 1, false);
+                ALTER TABLE records ALTER COLUMN id SET DEFAULT nextval('records_id_seq');
+            END IF;
+        END $$;
+    `);
+
     const columnsResult = await pool.query(
         "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'records'"
     );
