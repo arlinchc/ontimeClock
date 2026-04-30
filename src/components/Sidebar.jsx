@@ -48,7 +48,7 @@ function Sidebar() {
 
   return (
     <aside
-      className={`${isCollapsed ? "w-20" : "w-64"} bg-[#1a1a32] text-white h-screen overflow-y-auto p-4 flex flex-col transition-all duration-300 border-r border-white/10`}
+      className={`${isCollapsed ? "w-20" : "w-64"} bg-[#1a1a32] text-white h-full overflow-y-auto p-4 flex flex-col transition-all duration-300 border-r border-white/10`}
     >
       {/* CABECERA */}
       <div

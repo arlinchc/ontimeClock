@@ -1,10 +1,21 @@
 import { useState, useEffect } from "react";
+import {
+  AcademicCapIcon,
+  MegaphoneIcon,
+  ExclamationTriangleIcon,
+  CalendarDaysIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  PlayIcon,
+  PowerIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 
 const IMPORTANT_MESSAGES = [
-  "📢 Reunión de facultad: Lunes 10:00 AM — Sala de Juntas",
-  "⚠️ Mantenimiento del sistema: Viernes 11 PM - 1 AM",
-  "📅 Período de evaluaciones: 26 - 30 de Mayo",
-  "🎓 Ceremonia de graduación: 15 de Junio, 11:00 AM",
+  { Icon: MegaphoneIcon, text: "Reunión de facultad: Lunes 10:00 AM — Sala de Juntas" },
+  { Icon: ExclamationTriangleIcon, text: "Mantenimiento del sistema: Viernes 11 PM - 1 AM" },
+  { Icon: CalendarDaysIcon, text: "Período de evaluaciones: 26 - 30 de Mayo" },
+  { Icon: AcademicCapIcon, text: "Ceremonia de graduación: 15 de Junio, 11:00 AM" },
 ];
 
 export default function Clock() {
@@ -19,6 +30,7 @@ export default function Clock() {
   const [matricula, setMatricula] = useState("");
   const [selectedMatricula, setSelectedMatricula] = useState("");
   const [teachers, setTeachers] = useState([]);
+  const [actionType, setActionType] = useState("");
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -97,9 +109,8 @@ export default function Clock() {
   const handleAction = async (type) => {
     const matriculaActiva = (selectedMatricula || matricula).trim();
     if (!matriculaActiva.trim()) {
-      setActionMessage(
-        "⚠️ Escribe o selecciona una matrícula antes de registrar",
-      );
+      setActionType("warning");
+      setActionMessage("Escribe o selecciona una matrícula antes de registrar");
       setShowMessage(true);
       setTimeout(() => setShowMessage(false), 3000);
       return;
@@ -112,9 +123,8 @@ export default function Clock() {
     );
 
     if (!existeMatricula) {
-      setActionMessage(
-        `❌ La matrícula ${matriculaActiva} no existe en la base de datos`,
-      );
+      setActionType("error");
+      setActionMessage(`La matrícula ${matriculaActiva} no existe en la base de datos`);
       setShowMessage(true);
       setTimeout(() => setShowMessage(false), 3500);
       return;
@@ -138,7 +148,8 @@ export default function Clock() {
       const result = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        setActionMessage(`❌ ${result.error || "No se pudo registrar"}`);
+        setActionType("error");
+        setActionMessage(result.error || "No se pudo registrar");
         setShowMessage(true);
         setTimeout(() => setShowMessage(false), 3500);
         return;
@@ -152,17 +163,19 @@ export default function Clock() {
       });
 
       setLastAction(type);
+      setActionType("success");
       setActionMessage(
         type === "entrada"
-          ? `✅ Entrada registrada — ${timeStr} | Matrícula: ${matriculaActiva}`
-          : `🔴 Salida aplicada — ${timeStr} | Matrícula: ${matriculaActiva}`,
+          ? `Entrada registrada — ${timeStr} | Matrícula: ${matriculaActiva}`
+          : `Salida aplicada — ${timeStr} | Matrícula: ${matriculaActiva}`,
       );
       setShowMessage(true);
       setPulse(true);
       setTimeout(() => setPulse(false), 600);
       setTimeout(() => setShowMessage(false), 4000);
     } catch {
-      setActionMessage("❌ No se pudo conectar con el servidor");
+      setActionType("error");
+      setActionMessage("No se pudo conectar con el servidor");
       setShowMessage(true);
       setTimeout(() => setShowMessage(false), 3500);
     }
@@ -170,6 +183,7 @@ export default function Clock() {
 
   const dateStr = formatDate(time);
   const capitalizedDate = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+  const CurrentMsgIcon = IMPORTANT_MESSAGES[msgIndex].Icon;
 
   return (
     <div style={styles.root}>
@@ -179,7 +193,7 @@ export default function Clock() {
       {/* Top bar */}
       <div style={styles.topBar}>
         <div style={styles.logoArea}>
-          <div style={styles.logoIcon}>🎓</div>
+          <AcademicCapIcon style={styles.logoIcon} />
           <div>
             <div style={styles.logoTitle}>Sistema de Control</div>
             <div style={styles.logoSub}>Universidad — Asistencia Docente</div>
@@ -201,9 +215,13 @@ export default function Clock() {
               ...styles.msgText,
               opacity: fade ? 1 : 0,
               transition: "opacity 0.4s ease",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "8px",
             }}
           >
-            {IMPORTANT_MESSAGES[msgIndex]}
+            <CurrentMsgIcon style={{ width: 15, height: 15, flexShrink: 0, marginTop: 2, color: "#f0c02f" }} />
+            {IMPORTANT_MESSAGES[msgIndex].text}
           </div>
           <div style={styles.msgDots}>
             {IMPORTANT_MESSAGES.map((_, i) => (
@@ -353,6 +371,9 @@ export default function Clock() {
                 : "translateY(8px) scale(0.98)",
             }}
           >
+            {actionType === "success" && <CheckCircleIcon style={{ width: 18, height: 18, color: "#4ade80", flexShrink: 0 }} />}
+            {actionType === "error" && <XCircleIcon style={{ width: 18, height: 18, color: "#f87171", flexShrink: 0 }} />}
+            {actionType === "warning" && <ExclamationTriangleIcon style={{ width: 18, height: 18, color: "#fbbf24", flexShrink: 0 }} />}
             {actionMessage}
           </div>
         </div>
@@ -373,7 +394,7 @@ export default function Clock() {
                 "0 4px 20px rgba(240,192,47,0.25)";
             }}
           >
-            <span style={styles.btnIcon}>▶</span>
+            <PlayIcon style={styles.btnIcon} />
             ENTRADA
           </button>
 
@@ -391,7 +412,7 @@ export default function Clock() {
                 "0 4px 20px rgba(255,80,80,0.2)";
             }}
           >
-            <span style={styles.btnIcon}>■</span>
+            <PowerIcon style={styles.btnIcon} />
             SALIDA
           </button>
         </div>
@@ -429,18 +450,19 @@ export default function Clock() {
                 style={styles.modalClose}
                 onClick={() => setShowAllMsgs(false)}
               >
-                ✕
+                <XMarkIcon style={{ width: 14, height: 14 }} />
               </button>
             </div>
             <div style={styles.modalList}>
-              {IMPORTANT_MESSAGES.map((msg, i) => (
-                <div key={i} style={styles.modalItem}>
-                  <div style={styles.modalItemNum}>
-                    {String(i + 1).padStart(2, "0")}
+              {IMPORTANT_MESSAGES.map((msg, i) => {
+                const ItemIcon = msg.Icon;
+                return (
+                  <div key={i} style={styles.modalItem}>
+                    <ItemIcon style={{ width: 16, height: 16, color: "#f0c02f", flexShrink: 0, marginTop: 2 }} />
+                    <div style={styles.modalItemText}>{msg.text}</div>
                   </div>
-                  <div style={styles.modalItemText}>{msg}</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div style={styles.modalFooter}>
               {IMPORTANT_MESSAGES.length} avisos activos
@@ -454,6 +476,7 @@ export default function Clock() {
 
 const styles = {
   root: {
+    margin: "-2.5rem",
     minHeight: "100vh",
     background: "#1a1a32",
     display: "flex",
@@ -490,8 +513,9 @@ const styles = {
     gap: "12px",
   },
   logoIcon: {
-    fontSize: "2rem",
-    lineHeight: 1,
+    width: "2rem",
+    height: "2rem",
+    color: "#f0c02f",
   },
   logoTitle: {
     fontSize: "1rem",
@@ -563,7 +587,7 @@ const styles = {
     justifyContent: "center",
     zIndex: 1,
     paddingBottom: "20px",
-    gap: "0px",
+    gap: "12px",
   },
   clockRing: {
     width: "260px",
@@ -581,7 +605,6 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     transition: "box-shadow 0.3s ease",
-    marginBottom: "24px",
   },
   clockRingPulse: {
     boxShadow: `
@@ -697,8 +720,7 @@ const styles = {
   messageSlot: {
     width: "420px",
     maxWidth: "90vw",
-    height: "56px",
-    marginBottom: "10px",
+    height: "44px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -720,9 +742,7 @@ const styles = {
     boxShadow: "0 10px 28px rgba(0,0,0,0.35)",
     transition: "opacity 0.35s ease, transform 0.35s ease",
     pointerEvents: "none",
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
+    gap: "8px",
   },
   inputBlock: {
     display: "flex",
@@ -730,7 +750,6 @@ const styles = {
     gap: "10px",
     width: "420px",
     maxWidth: "90vw",
-    marginBottom: "16px",
     flexShrink: 0,
   },
   matriculaInput: {
@@ -762,7 +781,6 @@ const styles = {
     gap: "20px",
     width: "420px",
     maxWidth: "90vw",
-    marginBottom: "16px",
     flexShrink: 0,
   },
   btnEntrada: {
@@ -800,7 +818,8 @@ const styles = {
     textTransform: "uppercase",
   },
   btnIcon: {
-    fontSize: "0.75rem",
+    width: "18px",
+    height: "18px",
   },
   lastActionInfo: {
     fontSize: "0.78rem",
